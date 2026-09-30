@@ -1,27 +1,25 @@
 # Nerve Block Trainer
 
-Interactive study games for the DEN-626A lecture *Applied Anatomy for Local Anesthesia*.
-Open `index.html` in a browser (serve the folder, e.g. `python3 -m http.server`, so the images in `assets/` load).
+Interactive 3D study games for the DEN-626A lecture *Applied Anatomy for Local Anesthesia*.
+Serve the folder (for example `python3 -m http.server`) and open `index.html`. The page loads three.js from jsDelivr.
 
 ## Games
 
-- **Numb Map**: paint the teeth (pulp), buccal/labial and palatal/lingual gingiva, and skin/tongue areas each block anesthetizes, on maxillary and mandibular occlusal charts (Universal numbering). Reverse mode shows a numb zone and asks for the block.
-- **Specimen Lab**: the lecture's dissections, skull plates and intraoral photos with the labels removed. Tap the pin for a named structure, name a highlighted pin, or tap the injection site on a real photo (nasopalatine, IANB, MSA/PSA/ASA reference teeth).
-- **Name the Block**: identify PSA, MSA, ASA, supraperiosteal, long buccal and IANB from technique photos and models, plus infiltration vs field block vs nerve block.
-- **Technique Drill**: height, angle, depth, aspiration, pulps and soft tissue for every block, plus anatomy, vessel, bone-density and variation questions.
-- **Branch Sort**: sort V3 branches by division, V2 branches by segment, skull exits, palpable landmarks, maxillary artery parts, and infiltrate-vs-block.
-- **Rapid Fire**: 60 seconds of mixed questions.
-- **Atlas**: review card for every block with its numb zone, and the variations table.
+- **Nerve Finder (3D)**: a skull with teeth, gingiva and the V2/V3 branches in place. Explore by tapping, find a named nerve or landmark, or name a glowing nerve. Slide *Bone* down to see nerves inside their canals, and use *Jaw* to open the mouth.
+- **Numb Map (3D)**: tap the teeth (pulp) and buccal or palatal/lingual gingiva each block anesthetizes, plus lip, eyelid, nose, chin and tongue chips. A reverse mode shows a numb zone and asks for the block.
+- **Needle Lab (3D)**: tap the insertion point for a block, then watch the syringe advance, the anesthetic spread, the nerve light up and the teeth go numb. Also includes "name the block from the needle" and a demo mode for every block.
+- **Technique Drill**, **Branch Sort**, **Rapid Fire** and **Atlas**: text and sorting drills on heights, angles, depths, pathways, vessels and variations.
 
-Scores and best rounds are stored in the browser (`localStorage`).
+Scores are stored in the browser (`localStorage`).
 
-## Rebuilding the images
+## 3D model
 
-`tools/extract_images.py` crops the figures from the lecture PDF, paints out labels and captions, and writes `assets/*.jpg`:
+- `model/head.glb`: skull, 28 teeth and gingiva from [BodyParts3D](https://lifesciencedb.jp/bp3d/) (DBCLS, CC BY-SA 2.1 JP), built by `tools/build_model.py` from the STL files. See `model/LICENSE.txt`.
+- `model/nerves.json`: nerve courses written by `tools/nerves.py`. They are drawn to match the anatomy for teaching and are approximate.
 
 ```
-pip install pymupdf pillow opencv-python-headless numpy
-python3 tools/extract_images.py Local_Anesthesia_Applied_Anatomy.pdf
+pip install trimesh fast-simplification embreex numpy scipy
+python3 tools/build_model.py path/to/BodyParts3D_data/stl   # writes model/head_raw.glb and model/meta.json
+npx gltfpack -i model/head_raw.glb -o model/head.glb -kn -km -vp 14 -vn 10
+python3 tools/nerves.py model/nerves.json
 ```
-
-The images come from the lecture slides, which credit Malamed, Fehrenbach & Herring, Netter and the cited studies. Because this repository is public, `assets/` is git-ignored: run the script above on your own copy of the lecture PDF to generate it locally.

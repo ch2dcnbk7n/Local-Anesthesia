@@ -1,0 +1,10 @@
+model/head.glb is derived from BodyParts3D, (c) The Database Center for Life Science (DBCLS),
+licensed under Creative Commons Attribution-Share Alike 2.1 Japan
+(https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en). Source meshes: https://lifesciencedb.jp/bp3d/
+(STL conversion: https://github.com/Kevin-Mattheus-Moerman/BodyParts3D).
+
+Changes: decimated, re-oriented, ambient occlusion and tints baked into vertex colours, gingiva split into
+per-tooth buccal and palatal/lingual segments (tools/build_model.py). This derived model is shared under the
+same licence (CC BY-SA 2.1 JP).
+
+model/nerves.json (tools/nerves.py) holds hand-authored nerve courses for teaching; they are approximate.

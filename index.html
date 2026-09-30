@@ -35,6 +35,8 @@
   --f-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --r: 10px;
+  --stage-1: #F7F8F6;
+  --stage-2: #C9D2D0;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -42,6 +44,7 @@
     --nerve: #F0BC34; --nerve-soft: #3D3317; --nerve-ink: #FBE7AE; --vein: #86B6E2; --vein-soft: #1E3346;
     --artery: #EC6B62; --artery-soft: #43221F; --ok: #5FC493; --ok-soft: #173A2A; --gum: #7C4C4B;
     --enamel: #E6E1D5; --enamel-edge: #8B8373; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    --stage-1: #34403F; --stage-2: #111719;
     color-scheme: dark;
   }
 }
@@ -50,9 +53,11 @@
   --nerve: #F0BC34; --nerve-soft: #3D3317; --nerve-ink: #FBE7AE; --vein: #86B6E2; --vein-soft: #1E3346;
   --artery: #EC6B62; --artery-soft: #43221F; --ok: #5FC493; --ok-soft: #173A2A; --gum: #7C4C4B;
   --enamel: #E6E1D5; --enamel-edge: #8B8373; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+  --stage-1: #34403F; --stage-2: #111719;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { background: var(--ground); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
 .wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
 button { font: inherit; color: inherit; }
@@ -119,26 +124,6 @@ nav.tabs { display: flex; gap: 6px; min-width: max-content; }
 .seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: inset 0 -2px 0 var(--nerve); }
 .src { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
 
-/* plates (image + pins) */
-.plate { position: relative; padding: 12px; }
-.plate .frame { position: relative; line-height: 0; border-radius: 6px; overflow: hidden; background: #fff; }
-.plate img { width: 100%; height: auto; display: block; user-select: none; -webkit-user-drag: none; }
-.plate .frame.tapmode { cursor: crosshair; }
-.pin { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--vein); background: rgba(255,255,255,.92); cursor: pointer; padding: 0; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--f-mono); font-size: 11px; font-weight: 500; color: #16222A; }
-.pin:hover { background: #DCE8F3; }
-.pin.focus { border-color: var(--nerve); background: #FBEDC4; box-shadow: 0 0 0 6px rgba(224,161,15,.35); animation: pulse 1.4s infinite; }
-.pin.good { border-color: #2B7A57; background: #D6EEE2; }
-.pin.bad { border-color: #C0392F; background: #F7D9D5; }
-@keyframes pulse { 50% { box-shadow: 0 0 0 11px rgba(224,161,15,.12); } }
-@media (prefers-reduced-motion: reduce) { .pin.focus { animation: none; } .bar i { transition: none; } }
-.tag { position: absolute; transform: translate(-50%, calc(-100% - 20px)); background: #16222A; color: #fff; font-size: 12.5px; line-height: 1.25; padding: 4px 8px; border-radius: 5px; white-space: nowrap; pointer-events: none; font-weight: 600; }
-.tag.below { transform: translate(-50%, 20px); }
-.mark { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; border: 3px dashed #2B7A57; background: rgba(43,122,87,.18); pointer-events: none; }
-.markrect { position: absolute; border: 3px dashed #2B7A57; background: rgba(43,122,87,.14); border-radius: 8px; pointer-events: none; }
-.tapdot { position: absolute; width: 16px; height: 16px; transform: translate(-50%, -50%); border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #16222A; pointer-events: none; }
-.tapdot.good { background: #2B7A57; } .tapdot.bad { background: #C0392F; }
-.platehead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 4px 4px 10px; flex-wrap: wrap; }
-.platehead h3 { font-size: 19px; font-weight: 700; }
 .chooser { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 1px solid var(--line); background: var(--panel); padding: 5px 11px; border-radius: 999px; font-size: 14px; cursor: pointer; }
 .chip[aria-pressed="true"] { border-color: var(--vein); background: var(--vein-soft); color: var(--ink); font-weight: 600; }
@@ -193,10 +178,6 @@ svg .zone { font-family: var(--f-mono); font-size: 9px; fill: var(--muted); }
 .score { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; }
 .score b { font-variant-numeric: tabular-nums; }
 
-/* photo ID */
-.photo { padding: 12px; }
-.photo img { width: 100%; border-radius: 6px; display: block; max-height: 64vh; object-fit: contain; background: var(--panel-2); }
-
 /* sorter */
 .tray { display: flex; flex-wrap: wrap; gap: 8px; min-height: 46px; padding: 10px; border: 1px dashed var(--line); border-radius: 8px; background: var(--panel-2); }
 .item { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 6px 10px; cursor: pointer; font-size: 14.5px; line-height: 1.3; text-align: left; }
@@ -239,6 +220,36 @@ td.n { font-family: var(--f-mono); white-space: nowrap; font-variant-numeric: ta
 .missed { display: grid; gap: 6px; font-size: 14px; }
 .missed div { border-left: 3px solid var(--artery); padding: 2px 0 2px 10px; }
 .foot { margin-top: 36px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+/* 3D viewer */
+.stage3d { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .stage3d { grid-template-columns: minmax(0, 1fr); } }
+.v3d-card { padding: 0; overflow: hidden; }
+.v3d { display: grid; }
+.v3d-stage { position: relative; height: clamp(420px, 70vh, 760px); background: radial-gradient(120% 90% at 50% 20%, var(--stage-1), var(--stage-2)); touch-action: none; }
+@media (max-width: 860px) { .v3d-stage { height: clamp(330px, 58vh, 560px); } }
+.v3d-canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+.v3d-canvas:active { cursor: grabbing; }
+.v3d-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.v3d-tag { position: absolute; transform: translate(-50%, calc(-100% - 12px)); background: rgba(16,24,30,.9); color: #fff; font-size: 12.5px; font-weight: 600; line-height: 1.25; padding: 4px 8px; border-radius: 5px; white-space: nowrap; }
+.v3d-tag.good { background: #1f6b4a; } .v3d-tag.bad { background: #a2322a; } .v3d-tag.hover { background: rgba(16,24,30,.78); font-weight: 500; }
+.v3d-load { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; color: var(--muted); font-size: 14px; text-align: center; padding: 20px; }
+.spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--nerve); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.v3d-tools { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--panel); }
+.seg.small { flex-wrap: wrap; }
+.seg.small button { padding: 5px 9px; font-size: 13px; }
+.rng, .chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.rng input { width: 96px; accent-color: var(--vein); }
+.chk input { accent-color: var(--vein); }
+.lg-ring { border: 3px solid #1d4f86; border-radius: 50% !important; background: transparent; }
+.xt.req { background: var(--nerve); border-color: var(--nerve); color: #1c1400; }
+dl.tech { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 5px 10px; margin: 10px 0 0; font-size: 14px; }
+dl.tech dt { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding-top: 3px; }
+dl.tech dd { margin: 0; }
+.pearl { font-size: 14px; background: var(--nerve-soft); color: var(--nerve-ink); border-radius: 6px; padding: 8px 10px; }
+.foot a { color: inherit; }
 </style>
 </head>
 <body>
@@ -247,7 +258,7 @@ td.n { font-family: var(--f-mono); white-space: nowrap; font-variant-numeric: ta
     <div class="brand">
       <div class="eyebrow">DEN-626A · Applied anatomy for local anesthesia</div>
       <h1>Nerve Block <span class="y">Trainer</span></h1>
-      <p>Drill V2 and V3, what each block numbs, and where the needle goes, on the dissections, skulls and intraoral photos from the lecture.</p>
+      <p>Study V2 and V3, what each block numbs and where the needle goes, on a 3D skull you can rotate, see through and inject.</p>
     </div>
     <div class="tally" aria-live="polite">
       <div><b id="t-ans" class="mono">0</b><span>Answered</span></div>
@@ -258,9 +269,9 @@ td.n { font-family: var(--f-mono); white-space: nowrap; font-variant-numeric: ta
 
   <div class="navscroll">
     <nav class="tabs" role="tablist" aria-label="Games">
-      <button class="tab" role="tab" data-tab="numb">Numb Map <small>teeth &amp; tissue</small></button>
-      <button class="tab" role="tab" data-tab="lab">Specimen Lab <small>tap the structure</small></button>
-      <button class="tab" role="tab" data-tab="photo">Name the Block <small>photo ID</small></button>
+      <button class="tab" role="tab" data-tab="finder">Nerve Finder <small>3D</small></button>
+      <button class="tab" role="tab" data-tab="numb">Numb Map <small>3D teeth &amp; tissue</small></button>
+      <button class="tab" role="tab" data-tab="needle">Needle Lab <small>3D injections</small></button>
       <button class="tab" role="tab" data-tab="drill">Technique Drill <small>height · angle · depth</small></button>
       <button class="tab" role="tab" data-tab="sort">Branch Sort <small>pathways</small></button>
       <button class="tab" role="tab" data-tab="rapid">Rapid Fire <small>60 s</small></button>
@@ -271,11 +282,12 @@ td.n { font-family: var(--f-mono); white-space: nowrap; font-variant-numeric: ta
   <main id="screen"></main>
 
   <footer class="foot">
-    Content and images come from the lecture <i>Applied Anatomy for Local Anesthesia</i> (Dr. Ayesha Fahim, DEN-626A), which credits Malamed's <i>Handbook of Local Anesthesia</i> (7th ed.), Fehrenbach &amp; Herring's <i>Illustrated Anatomy of the Head and Neck</i>, Netter, Loetscher &amp; Walton (1988), and the variation meta-analyses cited in the deck. Mental and incisive block details follow Malamed. Printed labels were removed from the images for quizzing. For personal study only.
+    3D anatomy: skull, teeth and gingiva from <a href="https://lifesciencedb.jp/bp3d/">BodyParts3D</a> © The Database Center for Life Science, licensed <a href="https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en">CC BY-SA 2.1 Japan</a>; decimated, shaded and segmented for this page. Nerve courses, landmarks and the syringe are modelled for teaching and are approximate. Study content follows the DEN-626A lecture <i>Applied Anatomy for Local Anesthesia</i> and Malamed’s <i>Handbook of Local Anesthesia</i> (mental and incisive blocks). For personal study only.
   </footer>
 </div>
 
-<script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="module">
 (() => {
 'use strict';
 
@@ -298,7 +310,6 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 function s(tag, attrs) { const el = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v); return el; }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pick = a => a[Math.floor(Math.random() * a.length)];
-const img = name => `assets/${name}.jpg`;
 const store = {
   get(k, d) { try { const v = localStorage.getItem('nbt:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('nbt:' + k, JSON.stringify(v)); } catch (e) {} }
@@ -456,128 +467,6 @@ const ZONES = [
 ];
 function zoneTitle(z) { return `${B[z.block].full}${z.side ? ' ' + z.side : ''}`; }
 
-/* ------------------------------------------------------------------ data: plates */
-const PLATES = [
-  { id: 'maxn', img: 'plate_maxillary_nerve', title: 'Maxillary nerve, inferolateral view', src: 'Slide 11', ar: 1060 / 1500,
-    pins: [
-      { l: 'Posterior superior alveolar branches', x: .2057, y: .272, i: 'Leave V2 in the pterygopalatine fossa and run down the tuberosity. PSA block target.' },
-      { l: 'Infraorbital nerve', x: .3075, y: .272, i: 'V2 continues through the infraorbital groove and canal, emerging at the infraorbital foramen.' },
-      { l: 'Maxillary nerve (V2)', x: .2057, y: .3367, i: 'Sensory only. Crosses the pterygopalatine fossa after leaving the skull.' },
-      { l: 'Foramen rotundum', x: .2057, y: .4013, i: 'V2 leaves the middle cranial fossa here.' },
-      { l: 'Greater palatine nerve', x: .5538, y: .6353, i: 'Exits the greater palatine foramen; palatal mucosa from the molars forward. GP block.' },
-      { l: 'Nasopalatine nerve', x: .8717, y: .6167, i: 'Emerges through the incisive canal; anterior palate canine to canine. NP block.' }
-    ], big: true },
-  { id: 'lat', img: 'plate_nerve_lateral', title: 'Alveolar nerves, lateral view', src: 'Slide 15', ar: 1117 / 1500,
-    pins: [
-      { l: 'Posterior superior alveolar nerve', x: .376, y: .2433, i: 'Enters the posterior maxilla at the tuberosity to reach the molars.' },
-      { l: 'Infraorbital nerve', x: .4906, y: .162, i: 'Terminal V2 in the floor of the orbit.' },
-      { l: 'Anterior & middle superior alveolar nerves', x: .6312, y: .2567, i: 'Leave the infraorbital canal and run in the anterior sinus wall to the premolars and anterior teeth.' },
-      { l: 'Long buccal nerve', x: .3357, y: .4233, i: 'Crosses the anterior ramus at about the occlusal level; buccal gingiva of the molars.' },
-      { l: 'Inferior alveolar nerve (in canal)', x: .349, y: .4867, i: 'Runs in the mandibular canal to the mental foramen.' },
-      { l: 'Mental nerve', x: .6446, y: .4833, i: 'Exits the mental foramen below the premolar apices; lip and chin.' },
-      { l: 'Incisive nerve', x: .6446, y: .5413, i: 'Continues forward in bone to the canine and incisors.' },
-      { l: 'Mandibular division (V3)', x: .716, y: .6453, i: 'Leaves the skull through foramen ovale.' },
-      { l: 'Inferior alveolar nerve (at the mandibular foramen)', x: .658, y: .8, i: 'IANB deposits solution in the pterygomandibular space just above the lingula, before the nerve enters the foramen.' },
-      { l: 'Lingual nerve', x: .573, y: .83, i: 'Anterior to the IAN; joined by the chorda tympani. Anterior ⅔ tongue, floor of mouth, lingual gingiva.' }
-    ] },
-  { id: 'v3', img: 'plate_v3_fossa', title: 'V3 in the infratemporal fossa', src: 'Slide 14', ar: 2197 / 1316,
-    pins: [
-      { l: 'Temporalis muscle', x: .4475, y: .1795, i: 'Supplied by the deep temporal nerves (anterior division).' },
-      { l: 'Deep temporal nerves', x: .5425, y: .2087, i: 'Anterior division, motor to temporalis.' },
-      { l: 'Location of the trigeminal ganglion', x: .65, y: .167, i: 'Meckel’s cave on the apex of the petrous temporal bone.' },
-      { l: 'Mandibular nerve (V3)', x: .5975, y: .2938, i: 'Exits foramen ovale; the only division with a motor root.' },
-      { l: 'Nerve to lateral pterygoid', x: .545, y: .3155, i: 'Anterior division, motor.' },
-      { l: 'Lateral pterygoid muscle', x: .51, y: .399, i: 'The buccal nerve passes between its two heads.' },
-      { l: 'Buccal nerve', x: .51, y: .5075, i: 'The only sensory branch of the anterior division. The IANB misses it.' },
-      { l: 'Masseteric nerve', x: .62, y: .5634, i: 'Anterior division; masseter and TMJ.' }
-    ] },
-  { id: 'palate', img: 'plate_hard_palate', title: 'Hard palate, inferior view', src: 'Slide 19', ar: 1539 / 918,
-    pins: [
-      { l: 'Incisive fossa', x: .497, y: .234, i: 'Incisive foramen: nasopalatine nerve and vessels. Covered by the incisive papilla.' },
-      { l: 'Palatine process of maxilla', x: .4256, y: .3867, i: 'Anterior ~¾ of the hard palate.' },
-      { l: 'Horizontal plate of palatine bone', x: .4159, y: .684, i: 'Posterior ~¼ of the hard palate.' },
-      { l: 'Greater palatine foramen', x: .6595, y: .708, i: 'Posterolateral corner, usually opposite M3 (or M2–M3).' },
-      { l: 'Lesser palatine foramina', x: .6595, y: .768, i: 'Just behind the greater palatine foramen; supply the soft palate.' },
-      { l: 'Canine', x: .64, y: .1416, i: 'GP and NP both reach the canine palatal tissue.' },
-      { l: 'Second premolar', x: .7147, y: .3083, i: 'MSA injection site is the MB fold above its apex.' },
-      { l: 'First molar', x: .7375, y: .39, i: 'Zygomatic buttress lies over M1.' },
-      { l: 'Second molar', x: .7342, y: .5392, i: 'PSA injection site is the MB fold above M2.' },
-      { l: 'Third molar', x: .7635, y: .648, i: 'The greater palatine foramen usually sits opposite this tooth.' }
-    ] },
-  { id: 'mand', img: 'plate_mandible', title: 'Mandible, lateral and medial surfaces', src: 'Slide 34', ar: 1156 / 860,
-    pins: [
-      { l: 'Coronoid process', x: .479, y: .147, i: 'Its anterior border leads down to the coronoid notch, which sets IANB height.' },
-      { l: 'Condylar process', x: .682, y: .159, i: 'Articulates at the TMJ. Gow-Gates targets the neck of the condyle.' },
-      { l: 'Mandibular foramen', x: .552, y: .383, i: 'Where the IAN enters the canal, guarded by the lingula. IANB target is the sulcus just above the lingula.' },
-      { l: 'Submandibular fossa', x: .5, y: .501, i: 'Below the mylohyoid line, holding the submandibular gland.' },
-      { l: 'Sublingual fossa', x: .332, y: .532, i: 'Above the mylohyoid line anteriorly, holding the sublingual gland.' },
-      { l: 'Alveolar process', x: .238, y: .617, i: 'Tooth-bearing bone. Thick buccal cortex posteriorly in adults.' },
-      { l: 'Mental foramen', x: .332, y: .792, i: 'Below the premolar apices. Mental and incisive blocks.' },
-      { l: 'Ramus', x: .868, y: .709, i: 'Ramus blocks: IANB, Gow-Gates, Vazirani-Akinosi.' },
-      { l: 'Body', x: .464, y: .947, i: 'Body blocks: mental/incisive and long buccal.' }
-    ] },
-  { id: 'vest', img: 'photo_vestibule', title: 'Maxillary vestibule, clinical photo', src: 'Slide 24', ar: 1214 / 775,
-    pins: [
-      { l: 'Mucogingival junction', x: .1829, y: .2452, i: 'Boundary between attached gingiva and loose alveolar mucosa.' },
-      { l: 'Alveolar mucosa', x: .3369, y: .0774, i: 'Loose, movable mucosa that takes solution comfortably.' },
-      { l: 'Maxillary labial frenum', x: .4769, y: .1097, i: 'Midline fold; avoid injecting into it.' },
-      { l: 'Marginal gingiva', x: .5634, y: .3161, i: 'Free gingival margin around the tooth.' },
-      { l: 'Maxillary vestibule (mucobuccal fold)', x: .9382, y: .2387, i: 'Enter at the depth of the vestibule for every buccal injection.' },
-      { l: 'Attached gingiva', x: .2834, y: .3316, i: 'Bound down to bone; does not accept solution comfortably.' },
-      { l: 'Interdental gingiva', x: .2422, y: .4155, i: 'Gingival papilla between adjacent teeth.' },
-      { l: 'Mandibular buccal frenum', x: .1351, y: .9097, i: 'Fold of mucosa in the mandibular vestibule near the premolars.' },
-      { l: 'Mandibular vestibule', x: .8682, y: .8323, i: 'Depth of the lower vestibule.' }
-    ] }
-];
-const TAPS = [
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'Nasopalatine block: tap where the needle goes in.', shapes: [{ x: .4418, y: .1685, r: .08 }],
-    why: 'Palatal mucosa just lateral to the incisive papilla, shallow, to gentle bone contact. Pressure anesthesia with a swab first.' },
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'Tap the palatine rugae.', shapes: [{ x0: .277, y0: .2, x1: .64, y1: .39 }],
-    why: 'The transverse ridges behind the incisive papilla on the anterior palate.' },
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'Tap the median palatine raphe.', shapes: [{ x0: .395, y0: .4, x1: .53, y1: .99 }],
-    why: 'The midline ridge over the median palatine suture, running back from the papilla.' },
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'The MSA block is given in the MB fold above the apex of this tooth. Tap it (either side).', shapes: [{ x: .0786, y: .512, r: .07 }, { x: .8226, y: .512, r: .07 }],
-    why: 'Second premolar. Height: MB fold above the maxillary PM2 apex.' },
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'The PSA block is given in the MB fold above this tooth. Tap it (either side).', shapes: [{ x: .0462, y: .899, r: .07 }, { x: .9011, y: .899, r: .07 }],
-    why: 'Second molar. Needle 45° up, in and back, ~16 mm.' },
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'A low, thick zygomatic buttress over this tooth can block infiltration. Tap it (either side).', shapes: [{ x: .0693, y: .7116, r: .07 }, { x: .8549, y: .7116, r: .07 }],
-    why: 'First molar. If the buttress blocks infiltration (children, some adults), use a PSA block.' },
-  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
-    q: 'The ASA block aims at the apex of this tooth, in the canine fossa. Tap it (either side).', shapes: [{ x: .1525, y: .2, r: .07 }, { x: .7116, y: .2, r: .07 }],
-    why: 'Canine. Needle ~10° toward the canine apex, 5–10 mm.' },
-  { img: 'photo_ianb_site', ar: 805 / 1256, title: 'Open mouth, right side', src: 'Slide 37', reveal: 'photo_ianb_technique',
-    q: 'Inferior alveolar nerve block: tap your needle insertion point.', shapes: [{ x: .569, y: .387, r: .085 }],
-    why: 'Sulcus just above the lingula, 6–10 mm above the occlusal plane, lateral to the pterygomandibular raphe. Bone at ~20–25 mm; withdraw 1 mm; aspirate.' }
-];
-
-/* ------------------------------------------------------------------ data: photo ID */
-const PHOTO_ID = [
-  { img: 'tech_psa_model', a: 'psa', why: 'Needle at the MB fold above M2, travelling 2–2.5 cm up, in and back to the PSA nerve. M1–M3 highlighted.' },
-  { img: 'tech_psa_clinical', a: 'psa', why: 'Cheek retracted; needle enters high in the MB fold at the upper second molar.' },
-  { img: 'tech_msa_model', a: 'msa', why: 'MSA branch highlighted; PM1, PM2 and the MB root of M1 shown in red.' },
-  { img: 'tech_msa_clinical', a: 'msa', why: 'Needle entry between the first molar and second premolar, above the PM2 apex.' },
-  { img: 'tech_asa_model', a: 'asa', why: 'ASA branch highlighted; central, lateral and canine in red; needle at the canine apex.' },
-  { img: 'tech_asa_clinical', a: 'asa', why: 'Needle entry at the apex of the canine, in the canine fossa.' },
-  { img: 'tech_supraperiosteal_model', a: 'supra', why: 'One tooth highlighted and the needle aimed at its individual dental nerve: a supraperiosteal injection.' },
-  { img: 'tech_supraperiosteal_clinical', a: 'supra', why: 'Needle parallel to the long axis of one incisor, bevel facing the tooth.' },
-  { img: 'tech_long_buccal_skull', a: 'lb', why: 'Needle distal and buccal to the last molar at the anterior border of the ramus.' },
-  { img: 'tech_long_buccal_clinical', a: 'lb', why: 'Entry in the mucosa just distal and buccal to the last molar; 1–4 mm; ~0.3 mL.' },
-  { img: 'tech_mand_infiltration_skull', a: 'supra', why: 'Needle alongside a single mandibular anterior tooth: supraperiosteal infiltration where the bone is thin.' },
-  { img: 'tech_mand_infiltration_clinical', a: 'supra', why: 'Labial vestibule of the lower anterior teeth: supraperiosteal infiltration.' },
-  { img: 'photo_ianb_technique', a: 'ianb', why: 'Needle 6–10 mm above the occlusal plane, into the sulcus above the lingula from the opposite premolars.' }
-];
-const CONCEPTS = [
-  { img: 'concept_infiltration', a: 'Local infiltration', why: 'Solution deposited at the small terminal nerve endings in the area of treatment.' },
-  { img: 'concept_field', a: 'Field block', why: 'Solution deposited near the larger terminal branches, so the area distal to the injection is numb.' },
-  { img: 'concept_nerveblock', a: 'Nerve block', why: 'Solution deposited close to the main nerve trunk, usually some distance from the treatment site.' }
-];
-
 /* ------------------------------------------------------------------ data: facts */
 const FACTS = [
   ['Where does the trigeminal ganglion lie?', 'Meckel’s cave, on the apex of the petrous temporal bone', ['The pterygopalatine fossa', 'The cavernous sinus', 'The infratemporal fossa'], 'The semilunar ganglion holds the sensory cell bodies for all three divisions.'],
@@ -655,15 +544,15 @@ const SORTS = [
 
 /* ------------------------------------------------------------------ router */
 const screen = $('#screen');
-const TABS = { numb: NumbMap, lab: SpecimenLab, photo: NameTheBlock, drill: TechniqueDrill, sort: BranchSort, rapid: RapidFire, atlas: Atlas };
+const TABS = { finder: NerveFinder, numb: NumbMap3D, needle: NeedleLab, drill: TechniqueDrill, sort: BranchSort, rapid: RapidFire, atlas: Atlas };
 let current = null, cleanup = null;
-function go(tab) {
-  if (!TABS[tab]) tab = 'numb';
+function go(tab, opts) {
+  if (!TABS[tab]) tab = 'finder';
   if (cleanup) { cleanup(); cleanup = null; }
   current = tab;
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
   screen.replaceChildren();
-  cleanup = TABS[tab](screen) || null;
+  cleanup = TABS[tab](screen, opts) || null;
   store.set('tab', tab);
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
@@ -785,75 +674,580 @@ function paintKey(nodes, extras, key) {
   if (extras) for (const [t, el] of Object.entries(extras)) { el.classList.remove('req', 'var'); if (key[t] === 'req') el.classList.add('req'); else if (key[t] === 'opt') el.classList.add('var'); }
 }
 
-function NumbMap(root) {
+/* ------------------------------------------------------------------ 3D viewer */
+// Model: BodyParts3D (DBCLS, CC BY-SA 2.1 JP) skull, teeth and gingiva, decimated with baked occlusion.
+// Frame: millimetres, +X patient's left, +Y up, +Z anterior, origin near the occlusal plane.
+const JAW_PIVOT = [-0.8, 42, -55.6];
+const JAW_NERVES = ['ian', 'mental', 'incisive', 'lingual', 'buccal', 'mylohyoid'];
+const NERVE_BY_BLOCK = {
+  psa: ['psa'], msa: ['msa'], asa: ['asa'], io: ['asa', 'io_branches'], supra: [], np: ['np'], gp: ['gp'],
+  v2: ['v2', 'psa', 'msa', 'asa', 'gp', 'lp', 'np', 'io_branches'], ianb: ['ian', 'mental', 'incisive', 'lingual'],
+  lb: ['buccal'], mental: ['mental'], incisive: ['incisive', 'mental']
+};
+const LANDMARKS = [
+  { id: 'iof', name: 'Infraorbital foramen', p: [-25.9, 32.8, 4.6], jaw: false, mirror: true, view: 'front', info: 'Where V2 emerges on the face as the infraorbital nerve. Palpate it through the skin for the infraorbital block.' },
+  { id: 'cf', name: 'Canine fossa', p: [-21, 24, 10.4], jaw: false, mirror: true, view: 'front', info: 'Depression above the canine root. ASA block: needle ~10° toward the canine apex.' },
+  { id: 'zb', name: 'Zygomatic buttress', p: [-43.5, 22, -4], jaw: false, mirror: true, view: 'right', info: 'Lies over M1. A low, thick buttress blocks infiltration: use a PSA block.' },
+  { id: 'tub', name: 'Maxillary tuberosity', p: [-24.5, 13, -20.5], jaw: false, mirror: true, view: 'right', info: 'Behind the last molar. PSA needle runs up, in and back along it.' },
+  { id: 'gpf', name: 'Greater palatine foramen', p: [-14.5, 15, -16.5], jaw: false, mirror: true, view: 'palate', info: 'Usually opposite M3 (or M2–M3). Find it by palpation, a depression with a cotton swab.' },
+  { id: 'inc', name: 'Incisive foramen (under the papilla)', p: [0, 10.2, 15.5], jaw: false, mirror: false, view: 'palate', info: 'Nasopalatine nerve and vessels. NP block: just lateral to the incisive papilla.' },
+  { id: 'mf', name: 'Mental foramen', p: [-21.2, -21.5, 4.6], jaw: true, mirror: true, view: 'right', info: 'Below the premolar apices. Mental and incisive blocks.' },
+  { id: 'cn', name: 'Coronoid notch', p: [-38, 12, -21], jaw: true, mirror: true, view: 'right', info: 'Deepest point of the anterior ramus border. Sets IANB height.' },
+  { id: 'eor', name: 'External oblique ridge', p: [-36.1, -4, -14], jaw: true, mirror: true, view: 'right', info: 'Thick buccal cortex: why infiltration over adult mandibular molars is unreliable.' },
+  { id: 'manf', name: 'Mandibular foramen & lingula', p: [-36.3, 10.5, -41], jaw: true, mirror: true, view: 'ramus', info: 'IAN enters the canal here. IANB target: sulcus just above the lingula, 6–10 mm above the occlusal plane.' },
+  { id: 'myr', name: 'Mylohyoid ridge', p: [-21.5, -14, -18], jaw: true, mirror: true, view: 'ramus', info: 'Lingual surface of the body; guides lingual infiltration sites.' }
+];
+const SITES = { // entry = where the needle meets mucosa, tip = deposition point; jaw = coordinates move with the mandible
+  psa: { entry: [-32.5, 16.5, -12.5], tip: [-25.5, 29, -23.5], jaw: false, view: 'psa', open: 12, tol: 7 },
+  msa: { entry: [-29.6, 16, 3.2], tip: [-25, 25, 3], jaw: false, view: 'upperFront', open: 8, tol: 6 },
+  asa: { entry: [-21, 15.5, 16.2], tip: [-17.5, 24.5, 13], jaw: false, view: 'upperFront', open: 8, tol: 6 },
+  io: { entry: [-25.2, 15.5, 9.8], tip: [-26, 31.5, 5.6], jaw: false, view: 'upperFront', open: 8, tol: 6 },
+  supra: { entry: [-14.3, 13.2, 22.8], tip: [-11.3, 19.5, 18.4], jaw: false, view: 'upperFront', open: 8, tol: 5 },
+  np: { entry: [-2.6, 7.1, 17.2], tip: [-0.8, 10.4, 15.6], jaw: false, view: 'palate', open: 30, tol: 5, from: [25, -20, 80] },
+  gp: { entry: [-15.8, 13.3, -13.8], tip: [-14.6, 14.6, -16.4], jaw: false, view: 'palate', open: 30, tol: 6, from: [55, -20, 70] },
+  v2: { entry: [-14.6, 14.6, -16.4], tip: [-20.5, 40, -25], jaw: false, view: 'right', cam: [-165, -75, 85], open: 22, tol: 6, from: null },
+  ianb: { entry: [-25.5, 10.2, -28.2], tap: [-33.5, 10, -26], tip: [-35, 13.5, -39.3], jaw: true, view: 'right', cam: [115, -55, 175], open: 26, tol: 9, from: null },
+  lb: { entry: [-34.2, 1.5, -21.5], tip: [-36.8, 1.2, -22.2], jaw: true, view: 'right', cam: [-150, 25, 75], open: 18, tol: 6, from: [30, 10, 60] },
+  mental: { entry: [-22.6, -12.5, 6.8], tip: [-21.8, -20.3, 5], jaw: true, view: 'right', cam: [-110, 5, 140], open: 8, tol: 6 },
+  incisive: { entry: [-22.6, -12.5, 6.8], tip: [-21.8, -20.3, 5], jaw: true, view: 'right', cam: [-110, 5, 140], open: 8, tol: 6 }
+};
+const VIEWS = {
+  right: { pos: [-230, 20, 55], target: [-12, 12, -15] },
+  left: { pos: [230, 20, 55], target: [12, 12, -15] },
+  front: { pos: [-40, 18, 250], target: [0, 14, 0] },
+  palate: { pos: [0, -185, 50], target: [0, 10, -4], hideLower: true },
+  lower: { pos: [0, 175, 95], target: [0, -12, -6], hideUpper: true },
+  psa: { pos: [-175, -10, 95], target: [-24, 18, -12] },
+  upperFront: { pos: [-120, -5, 175], target: [-14, 16, 6] },
+  lowerFront: { pos: [-120, -25, 170], target: [-14, -16, 6] },
+  lowerRight: { pos: [-190, 10, 60], target: [-28, 0, -14] },
+  ramus: { pos: [110, 5, 130], target: [-28, 6, -30] }
+};
+
+const Viewer = (() => {
+  let T, ready = null, renderer, scene, camera, controls, jaw, wrap, canvas, layer, loadEl, clock;
+  const S = { meshes: {}, bones: [], teeth: {}, gums: {}, targets: {}, nerves: {}, nerveMats: {}, proxies: [], landmarks: [], upper: [], lower: [],
+    boneOpacity: 1, soft: true, nervesOn: true, landmarksOn: false, view: 'right', muscles: [], openDeg: 0, openTarget: 0, glow: new Set(), onPick: null, pickKind: 'all', tags: [], fly: null, anims: [], hover: null };
+  const v3 = a => new T.Vector3(a[0], a[1], a[2]);
+
+  function el() {
+    if (wrap) return wrap;
+    canvas = h('canvas', { class: 'v3d-canvas', 'aria-label': '3D skull. Drag to rotate, scroll or pinch to zoom.' });
+    layer = h('div', { class: 'v3d-layer' });
+    loadEl = h('div', { class: 'v3d-load' }, h('div', { class: 'spin' }), h('span', null, 'Loading the 3D skull…'));
+    const tb = h('div', { class: 'v3d-tools' },
+      h('div', { class: 'seg small', role: 'group', 'aria-label': 'View' },
+        ['right', 'front', 'left', 'palate', 'lower', 'ramus'].map(v => h('button', { type: 'button', 'data-view': v, onclick: () => go(v) },
+          { right: 'Right', front: 'Front', left: 'Left', palate: 'Palate', lower: 'Lower arch', ramus: 'Inside ramus' }[v]))),
+      h('label', { class: 'rng' }, 'Bone', h('input', { type: 'range', id: 'v3d-bone', min: '0.12', max: '1', step: '0.01', value: '1', oninput: e => setBone(+e.target.value) })),
+      h('label', { class: 'rng' }, 'Jaw', h('input', { type: 'range', id: 'v3d-jaw', min: '0', max: '32', step: '1', value: '0', oninput: e => setOpen(+e.target.value, true) })),
+      h('label', { class: 'chk' }, h('input', { type: 'checkbox', id: 'v3d-soft', checked: true, onchange: e => setSoft(e.target.checked) }), 'Gums'));
+    wrap = h('div', { class: 'v3d' }, h('div', { class: 'v3d-stage' }, canvas, layer, loadEl), tb);
+    return wrap;
+  }
+
+  function init() {
+    if (ready) return ready;
+    ready = (async () => {
+      T = await import('three');
+      const [{ GLTFLoader }, { OrbitControls }, { RoomEnvironment }] = await Promise.all([
+        import('three/addons/loaders/GLTFLoader.js'), import('three/addons/controls/OrbitControls.js'), import('three/addons/environments/RoomEnvironment.js')]);
+      renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+      renderer.outputColorSpace = T.SRGBColorSpace;
+      renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
+      renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+      renderer.localClippingEnabled = true;
+      scene = new T.Scene();
+      const pm = new T.PMREMGenerator(renderer);
+      scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.55;
+      camera = new T.PerspectiveCamera(30, 1, 5, 3000);
+      controls = new OrbitControls(camera, canvas);
+      controls.enableDamping = true; controls.dampingFactor = 0.09; controls.minDistance = 70; controls.maxDistance = 600; controls.rotateSpeed = 0.8;
+      // studio lighting that follows the camera: warm key with soft shadows, cool rim, low fill
+      const rig = new T.Group(); scene.add(rig);
+      const key = new T.DirectionalLight(0xfff1de, 2.7); key.position.set(-140, 190, 160); key.castShadow = true;
+      key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 10, far: 700 });
+      key.shadow.bias = -0.0004; key.shadow.normalBias = 0.5; key.shadow.radius = 4;
+      const rim = new T.DirectionalLight(0xd5e6ff, 1.3); rim.position.set(160, 120, -220);
+      const fill = new T.HemisphereLight(0xf4f6ff, 0x3b302a, 0.45);
+      rig.add(key, key.target, rim, rim.target); scene.add(fill);
+      S.rig = rig;
+      const root = new T.Group(); scene.add(root);
+      jaw = new T.Group(); jaw.position.set(...JAW_PIVOT); root.add(jaw);
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync('model/head.glb', ev => { if (ev.total) loadEl.lastChild.textContent = `Loading the 3D skull… ${Math.round(100 * ev.loaded / ev.total)}%`; });
+      const mats = {
+        bone: new T.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.6, clearcoat: 0.06, clearcoatRoughness: 0.6, sheen: 0.25, sheenColor: new T.Color('#fff2dc'), sheenRoughness: 0.8 }),
+        tooth: new T.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.1, ior: 1.62, specularIntensity: 0.9, sheen: 0.3, sheenColor: new T.Color('#e4ecff') }),
+        gum: new T.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.34, clearcoat: 0.75, clearcoatRoughness: 0.2, sheen: 0.7, sheenColor: new T.Color('#ff9f98') }),
+        muscle: new T.MeshPhysicalMaterial({ color: '#9b3a31', roughness: 0.46, clearcoat: 0.35, sheen: 0.6, sheenColor: new T.Color('#ff8c7c') })
+      };
+      const list = []; gltf.scene.traverse(o => { if (o.isMesh) list.push(o); });
+      const c = new T.Color();
+      for (const o of list) {
+        const name = (o.parent && o.parent.name) || o.name; o.name = name;
+        const ca = o.geometry.attributes.color;
+        if (ca) { // stored as sRGB bytes; convert once to linear floats
+          const arr = new Float32Array(ca.count * 3);
+          for (let i = 0; i < ca.count; i++) { c.setRGB(ca.getX(i), ca.getY(i), ca.getZ(i), T.SRGBColorSpace); arr[i * 3] = c.r; arr[i * 3 + 1] = c.g; arr[i * 3 + 2] = c.b; }
+          o.geometry.setAttribute('color', new T.BufferAttribute(arr, 3));
+        }
+        const kind = name.split('_')[0];
+        o.material = (kind === 'tooth' || kind === 'gum') ? mats[kind].clone() : mats[kind];
+        o.castShadow = kind !== 'gum'; o.receiveShadow = true;
+        S.meshes[name] = o;
+        if (kind === 'bone') S.bones.push(o);
+        if (kind === 'muscle') S.muscles.push(o);
+        if (kind === 'tooth') { const n = +name.split('_')[1]; S.teeth[n] = o; S.targets['p' + n] = o; o.userData.target = 'p' + n; }
+        if (kind === 'gum') { const t = name.slice(4); S.gums[t] = o; S.targets[t] = o; o.userData.target = t; }
+      }
+      root.add(gltf.scene);
+      gltf.scene.updateMatrixWorld(true);
+      for (const o of list) {
+        const n = o.name, lowerPart = n === 'bone_mandible' || ((n.startsWith('tooth_') || n.startsWith('gum_')) && +n.replace(/\D/g, '') > 16);
+        if (lowerPart) { jaw.attach(o.parent && o.parent !== gltf.scene ? o.parent : o); S.lower.push(o); }
+        else if (n.startsWith('tooth_') || n.startsWith('gum_')) S.upper.push(o);
+      }
+      await buildNerves();
+      buildLandmarks();
+      clock = new T.Clock();
+      const ro = new ResizeObserver(resize); ro.observe(canvas.parentElement);
+      resize();
+      bindPointer();
+      loadEl.hidden = true;
+      go('right', 0);
+    })();
+    ready.catch(err => { loadEl.lastChild.textContent = '3D needs WebGL and a network connection for three.js. The text games still work. (' + (err && err.message || err) + ')'; loadEl.firstChild.hidden = true; });
+    return ready;
+  }
+
+  function taperTube(pts, r0, r1, mirror) {
+    const P = pts.map(p => new T.Vector3(mirror ? -p[0] : p[0], p[1], p[2]));
+    const curve = new T.CatmullRomCurve3(P, false, 'centripetal');
+    const len = curve.getLength(), seg = Math.max(6, Math.ceil(len / 0.8)), rad = 10;
+    const g = new T.TubeGeometry(curve, seg, 1, rad, false);
+    const pos = g.attributes.position, nrm = g.attributes.normal;
+    for (let i = 0; i <= seg; i++) {
+      const t = i / seg, ctr = curve.getPointAt(t), r = r0 + (r1 - r0) * t;
+      const end = Math.min(1, Math.min(i, seg - i) / 1.2 + 0.35); // slight rounding at the ends
+      for (let j = 0; j <= rad; j++) {
+        const k = i * (rad + 1) + j;
+        pos.setXYZ(k, ctr.x + nrm.getX(k) * r * end, ctr.y + nrm.getY(k) * r * end, ctr.z + nrm.getZ(k) * r * end);
+      }
+    }
+    pos.needsUpdate = true; g.computeBoundingSphere();
+    return g;
+  }
+  async function buildNerves() {
+    const data = await fetch('model/nerves.json').then(r => r.json());
+    S.nerveData = data.nerves;
+    const proxyMat = new T.MeshBasicMaterial({ visible: false });
+    const base = new T.MeshPhysicalMaterial({ color: '#e8bb2a', roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.18, sheen: 0.5, sheenColor: new T.Color('#fff0b0'), emissive: new T.Color('#5a3c00'), emissiveIntensity: 0.18 });
+    const add = (key, geo, proxyGeo, parent) => {
+      const m = new T.Mesh(geo, S.nerveMats[key]); m.castShadow = true; m.receiveShadow = true; m.userData.nerve = key; parent.add(m);
+      const p = new T.Mesh(proxyGeo, proxyMat); p.userData.nerve = key; parent.add(p); S.proxies.push(p);
+      (S.nerves[key] = S.nerves[key] || []).push(m);
+    };
+    for (const [key, nv] of Object.entries(data.nerves)) {
+      S.nerveMats[key] = base.clone();
+      const parent = JAW_NERVES.includes(key) ? jaw : scene;
+      for (const mirror of [false, true]) {
+        // jaw-attached nerves are authored in skull coordinates; express them relative to the pivot
+        const P = parent === jaw ? nv.pts.map(p => [p[0] - (mirror ? -JAW_PIVOT[0] : JAW_PIVOT[0]), p[1] - JAW_PIVOT[1], p[2] - JAW_PIVOT[2]]) : nv.pts;
+        add(key, taperTube(P, nv.r[0], nv.r[1], mirror), taperTube(P, nv.r[0] + 1.6, nv.r[1] + 1.6, mirror), parent);
+        for (const tw of nv.twigs) {
+          const Q = parent === jaw ? tw.map(p => [p[0] - (mirror ? -JAW_PIVOT[0] : JAW_PIVOT[0]), p[1] - JAW_PIVOT[1], p[2] - JAW_PIVOT[2]]) : tw;
+          add(key, taperTube(Q, 0.36, 0.26, mirror), taperTube(Q, 1.6, 1.6, mirror), parent);
+        }
+      }
+    }
+    // trigeminal ganglion
+    S.nerveMats.ganglion = base.clone();
+    for (const mirror of [false, true]) {
+      const g = new T.Mesh(new T.SphereGeometry(1, 24, 16), S.nerveMats.ganglion);
+      g.scale.set(5.5, 3, 8); g.rotation.y = mirror ? 0.5 : -0.5; g.position.set(mirror ? -data.ganglion[0] : data.ganglion[0], data.ganglion[1], data.ganglion[2]);
+      g.userData.nerve = 'ganglion'; scene.add(g); (S.nerves.ganglion = S.nerves.ganglion || []).push(g); S.proxies.push(g);
+    }
+    S.nerveData.ganglion = { name: 'Trigeminal ganglion', div: 'CN V', info: 'Semilunar ganglion in Meckel’s cave on the apex of the petrous temporal bone: sensory cell bodies for V1, V2 and V3.' };
+  }
+  function buildLandmarks() {
+    const ringGeo = new T.RingGeometry(1.5, 2.4, 32);
+    for (const lm of LANDMARKS) for (const mirror of (lm.mirror ? [false, true] : [false])) {
+      const p = [mirror ? -lm.p[0] : lm.p[0], lm.p[1], lm.p[2]];
+      const mat = new T.MeshBasicMaterial({ color: '#1d4f86', transparent: true, opacity: 0.85, depthTest: true, side: T.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 });
+      const m = new T.Mesh(ringGeo, mat); m.userData.landmark = lm.id; m.renderOrder = 3;
+      if (lm.jaw) { m.position.set(p[0] - JAW_PIVOT[0], p[1] - JAW_PIVOT[1], p[2] - JAW_PIVOT[2]); jaw.add(m); } else { m.position.set(...p); scene.add(m); }
+      m.visible = false; S.landmarks.push(m);
+    }
+  }
+
+  function resize() {
+    if (!renderer || !canvas.parentElement) return;
+    const r = canvas.parentElement.getBoundingClientRect(); if (!r.width || !r.height) return;
+    renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.fov = camera.aspect < 1 ? Math.min(54, 30 / camera.aspect ** 0.85) : 30; camera.updateProjectionMatrix();
+  }
+  function frame() {
+    const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    if (S.fly) {
+      const f = S.fly; f.t = Math.min(1, f.t + dt / f.dur); const e = f.t < .5 ? 4 * f.t ** 3 : 1 - (-2 * f.t + 2) ** 3 / 2;
+      camera.position.lerpVectors(f.p0, f.p1, e); controls.target.lerpVectors(f.t0, f.t1, e); if (f.t >= 1) S.fly = null;
+    }
+    if (Math.abs(S.openDeg - S.openTarget) > 0.01) { S.openDeg += (S.openTarget - S.openDeg) * Math.min(1, dt * 6); poseJaw(); }
+    controls.update();
+    S.rig.quaternion.copy(camera.quaternion); S.rig.position.copy(controls.target);
+    for (const lm of S.landmarks) if (lm.visible) lm.quaternion.copy(camera.quaternion);
+    const pulse = 0.55 + 0.45 * Math.sin(t * 4.2);
+    for (const [k, mat] of Object.entries(S.nerveMats)) {
+      if (S.glow.has(k)) { mat.emissive.setRGB(1, 0.72, 0.1); mat.emissiveIntensity = 0.35 + 0.5 * pulse; }
+      else { mat.emissive.setRGB(0.35, 0.24, 0); mat.emissiveIntensity = 0.18; }
+    }
+    for (const o of Object.values(S.targets)) if (o.userData.state === 'miss') o.material.emissiveIntensity = 0.25 + 0.3 * pulse;
+    const adt = window.__nbtFast ? dt * 12 : dt;
+    const running = S.anims; S.anims = []; // callbacks may queue new animations while we iterate
+    for (const a of running) { let keep = false; try { keep = a(adt) !== false; } catch (e) { keep = false; } if (keep) S.anims.push(a); }
+    renderer.render(scene, camera);
+    for (const tg of S.tags) placeTag(tg);
+  }
+
+  function mount(container) {
+    container.append(el());
+    const run = () => { resize(); renderer.setAnimationLoop(frame); };
+    init().then(run, () => {});
+    return () => { if (renderer) renderer.setAnimationLoop(null); reset(); };
+  }
+  function go(view, dur = 0.9) {
+    if (!camera) return;
+    const v = VIEWS[view]; if (!v) return;
+    S.view = view;
+    wrap.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
+    for (const o of S.lower) o.visible = !v.hideLower; for (const o of S.bones) if (o.name !== 'bone_mandible') o.visible = !v.hideUpper;
+    for (const o of S.upper) o.visible = !v.hideUpper; for (const o of S.muscles) o.visible = !v.hideUpper;
+    applyNerves(); applySoft(); applyLandmarks();
+    if (view === 'palate' || view === 'lower' || view === 'ramus') setOpen(Math.max(S.openTarget, view === 'ramus' ? 28 : 24));
+    const p1 = v3(v.pos), t1 = v3(v.target);
+    if (!dur || window.__nbtFast) { camera.position.copy(p1); controls.target.copy(t1); controls.update(); return; }
+    S.fly = { t: 0, dur, p0: camera.position.clone(), p1, t0: controls.target.clone(), t1 };
+  }
+  function setOpen(deg, fromUI, instant) { S.openTarget = deg; if (instant && jaw) { S.openDeg = deg; poseJaw(); jaw.updateMatrixWorld(true); } const r = document.getElementById('v3d-jaw'); if (r && !fromUI) r.value = deg; }
+  function setBone(a) {
+    S.boneOpacity = a; const r = document.getElementById('v3d-bone'); if (r && +r.value !== a) r.value = a;
+    for (const o of S.bones) { o.material.transparent = a < 1; o.material.opacity = a; o.material.depthWrite = a >= 1; o.castShadow = a >= 1; o.material.needsUpdate = true; }
+  }
+  function onJaw(o) { while (o) { if (o === jaw) return true; o = o.parent; } return false; }
+  function applySoft() { const v = VIEWS[S.view] || {}; for (const o of Object.values(S.gums)) o.visible = S.soft && (onJaw(o) ? !v.hideLower : !v.hideUpper); }
+  function applyNerves() { const v = VIEWS[S.view] || {}; for (const arr of Object.values(S.nerves)) for (const m of arr) m.visible = S.nervesOn && !((v.hideLower && m.parent === jaw) || (v.hideUpper && m.parent !== jaw)); }
+  function setSoft(on) { S.soft = on; const c = document.getElementById('v3d-soft'); if (c) c.checked = on; applySoft(); }
+
+  // picking: short click/tap without drag
+  function bindPointer() {
+    let down = null;
+    canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+    canvas.addEventListener('pointerup', e => {
+      if (!down) return; const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); const dt = performance.now() - down.t; down = null;
+      if (moved > 6 || dt > 700 || !S.onPick) return;
+      const hit = pick(e.clientX, e.clientY); S.onPick(hit);
+    });
+    canvas.addEventListener('pointermove', e => { if (S.onHover && !down) S.onHover(pick(e.clientX, e.clientY), e); });
+    canvas.addEventListener('pointerleave', () => { if (S.onHover) S.onHover(null); });
+  }
+  const ray = () => new T.Raycaster();
+  function pick(cx, cy) {
+    const r = canvas.getBoundingClientRect();
+    const rc = ray(); rc.setFromCamera(new T.Vector2((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), camera);
+    const objs = [];
+    const solid = [...Object.values(S.targets).filter(o => o.visible), ...S.bones.filter(o => o.visible && S.boneOpacity >= 0.7)];
+    if (S.pickKind === 'nerve' || S.pickKind === 'all') objs.push(...S.proxies.filter(p => p.parent && isShown(p)));
+    if (S.pickKind === 'landmark' || S.pickKind === 'all') objs.push(...S.landmarks.filter(l => l.visible));
+    objs.push(...solid);
+    const hits = rc.intersectObjects(objs, false);
+    if (!hits.length) return null;
+    const hi = hits[0], o = hi.object;
+    return { point: hi.point.clone(), nerve: o.userData.nerve, target: o.userData.target, landmark: o.userData.landmark, bone: o.name.startsWith('bone') ? o.name : null, object: o };
+  }
+  function isShown(p) { const list = S.nerves[p.userData.nerve]; return list && list.some(m => m.visible && m.parent === p.parent); }
+
+  // world position of a site/landmark point (jaw points follow the mandible)
+  function world(p, onJawPt) {
+    if (!onJawPt) return v3(p);
+    return jaw.localToWorld(new T.Vector3(p[0] - JAW_PIVOT[0], p[1] - JAW_PIVOT[1], p[2] - JAW_PIVOT[2]));
+  }
+
+  // state colours on teeth and gum segments
+  const STATE = { sel: ['#ffcf3a', '#3d2b00', .35], hit: ['#62d394', '#0b3a22', .3], miss: ['#ff9d93', '#b3261e', .3], wrong: ['#ff5b50', '#5c0d08', .35],
+    var: ['#fff1c4', '#000000', 0], varsel: ['#ffd96b', '#2d2000', .2], req: ['#ffcf3a', '#3d2b00', .35], dim: ['#b9b9b9', '#000000', 0] };
+  function setState(t, st) {
+    const o = S.targets[t]; if (!o) return; o.userData.state = st || null;
+    const s = STATE[st]; o.material.color.set(s ? s[0] : '#ffffff'); o.material.emissive.set(s ? s[1] : '#000000'); o.material.emissiveIntensity = s ? s[2] : 0;
+  }
+  function clearStates() { for (const t of Object.keys(S.targets)) setState(t, null); }
+  function glow(keys) { S.glow = new Set(keys || []); }
+  function dimNerves(except) {
+    for (const [k, arr] of Object.entries(S.nerves)) for (const m of arr) {
+      const on = !except || except.includes(k);
+      if (m.material.transparent !== !on) m.material.needsUpdate = true;
+      m.material.transparent = !on; m.material.opacity = on ? 1 : 0.16; m.material.depthWrite = on;
+    }
+  }
+  function showNerves(on) { S.nervesOn = on; applyNerves(); }
+  function showLandmarks(on) { S.landmarksOn = on; applyLandmarks(); }
+  function applyLandmarks() { const v = VIEWS[S.view] || {}; for (const l of S.landmarks) l.visible = S.landmarksOn && !((v.hideLower && l.parent === jaw) || (v.hideUpper && l.parent !== jaw)); }
+
+  // HTML tags pinned to 3D points
+  function tag(point, text, cls) {
+    const e = h('div', { class: 'v3d-tag ' + (cls || '') }, text); layer.append(e);
+    const tg = { e, p: point.clone ? point.clone() : v3(point) }; S.tags.push(tg); placeTag(tg); return tg;
+  }
+  function placeTag(tg) {
+    const p = tg.p.clone().project(camera), r = canvas.getBoundingClientRect();
+    const vis = p.z < 1 && Math.abs(p.x) < 1.05 && Math.abs(p.y) < 1.05;
+    tg.e.style.display = vis ? '' : 'none';
+    tg.e.style.left = ((p.x + 1) / 2 * r.width) + 'px'; tg.e.style.top = ((1 - p.y) / 2 * r.height) + 'px';
+  }
+  function clearTags() { for (const tg of S.tags) tg.e.remove(); S.tags = []; }
+
+  // markers and the syringe
+  const extras = [];
+  function marker(p, color = '#2b7a57', r = 3.2) {
+    const m = new T.Mesh(new T.SphereGeometry(r, 24, 16), new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, depthTest: false }));
+    m.position.copy(p); m.renderOrder = 10; scene.add(m); extras.push(m);
+    const ring = new T.Mesh(new T.SphereGeometry(r * 0.28, 12, 8), new T.MeshBasicMaterial({ color, depthTest: false })); ring.position.copy(p); ring.renderOrder = 11; scene.add(ring); extras.push(ring);
+    return m;
+  }
+  function makeSyringe(needleLen) {
+    const g = new T.Group();
+    const steel = new T.MeshPhysicalMaterial({ color: '#dfe4ea', metalness: 1, roughness: 0.22 });
+    const chrome = new T.MeshPhysicalMaterial({ color: '#c9ced6', metalness: 1, roughness: 0.14, clearcoat: 0.6 });
+    const hubM = new T.MeshPhysicalMaterial({ color: '#d9642a', roughness: 0.4, clearcoat: 0.5 });
+    const glass = new T.MeshPhysicalMaterial({ color: '#f4f8ff', roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.28, depthWrite: false });
+    const fluid = new T.MeshPhysicalMaterial({ color: '#bfe6ff', roughness: 0.1, transparent: true, opacity: 0.55 });
+    const cyl = (r0, r1, len, mat, y, seg = 24) => { const m = new T.Mesh(new T.CylinderGeometry(r1, r0, len, seg), mat); m.position.y = y + len / 2; m.castShadow = true; g.add(m); return m; };
+    cyl(0.22, 0.22, needleLen, steel, 0, 12);
+    cyl(0.9, 1.5, 7, hubM, needleLen);
+    cyl(4.4, 4.4, 34, glass, needleLen + 7);
+    cyl(3.9, 3.9, 30, fluid, needleLen + 9);
+    cyl(4.9, 4.9, 3, chrome, needleLen + 6);
+    cyl(4.9, 4.9, 3, chrome, needleLen + 40);
+    for (const a of [0, Math.PI]) { const bar = cyl(0.8, 0.8, 34, chrome, needleLen + 7, 10); bar.position.x = Math.cos(a) * 4.9; bar.position.z = Math.sin(a) * 4.9; }
+    cyl(1.3, 1.3, 22, chrome, needleLen + 43, 12);
+    const ring = new T.Mesh(new T.TorusGeometry(7, 1.5, 12, 36), chrome); ring.position.y = needleLen + 72; ring.castShadow = true; g.add(ring);
+    const grip = new T.Mesh(new T.TorusGeometry(6.5, 1.3, 12, 36), chrome); grip.rotation.x = Math.PI / 2; grip.position.y = needleLen + 44; g.add(grip);
+    return g;
+  }
+  let syringe = null, cloud = null;
+  function clearExtras() { for (const m of extras) { m.parent && m.parent.remove(m); } extras.length = 0; if (syringe) { syringe.parent.remove(syringe); syringe = null; } if (cloud) { cloud.parent.remove(cloud); cloud = null; } }
+  function placeSyringe(blockId, animate, onDone) {
+    const site = SITES[blockId]; if (!site) return;
+    if (syringe) syringe.parent.remove(syringe);
+    const parent = site.jaw ? jaw : scene;
+    const off = site.jaw ? JAW_PIVOT : [0, 0, 0];
+    const tip = new T.Vector3(site.tip[0] - off[0], site.tip[1] - off[1], site.tip[2] - off[2]);
+    const entry = new T.Vector3(site.entry[0] - off[0], site.entry[1] - off[1], site.entry[2] - off[2]);
+    let dir = entry.clone().sub(tip).normalize();
+    if (site.from) { const f = new T.Vector3(...site.from).normalize(); dir = dir.add(f.multiplyScalar(0.6)).normalize(); }
+    const needleLen = Math.max(24, tip.distanceTo(entry) + 14);
+    syringe = makeSyringe(needleLen);
+    syringe.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir);
+    parent.add(syringe);
+    const start = tip.clone().add(dir.clone().multiplyScalar(needleLen * 0.7 + 10));
+    if (!animate) { syringe.position.copy(tip); onDone && onDone(); return; }
+    const sy = syringe; sy.position.copy(start); let t = 0;
+    S.anims.push(dt => { if (!sy.parent) return false; t = Math.min(1, t + dt / 1.3); const e = 1 - (1 - t) ** 3; sy.position.lerpVectors(start, tip, e); if (t >= 1) { onDone && onDone(); return false; } });
+  }
+  function deposit(blockId, onDone) {
+    const site = SITES[blockId]; if (!site) return;
+    const parent = site.jaw ? jaw : scene, off = site.jaw ? JAW_PIVOT : [0, 0, 0];
+    if (cloud) cloud.parent.remove(cloud);
+    cloud = new T.Mesh(new T.SphereGeometry(1, 32, 24), new T.MeshPhysicalMaterial({ color: '#7fc8ff', transparent: true, opacity: 0.32, roughness: 0.1, emissive: new T.Color('#2a7fd0'), emissiveIntensity: 0.35, depthWrite: false }));
+    cloud.position.set(site.tip[0] - off[0], site.tip[1] - off[1], site.tip[2] - off[2]); cloud.scale.setScalar(0.1); cloud.renderOrder = 5; parent.add(cloud);
+    let t = 0; const R = blockId === 'v2' ? 7 : blockId === 'ianb' ? 6 : 4.5; const cl = cloud;
+    S.anims.push(dt => { if (!cl.parent) return false; t = Math.min(1, t + dt / 1.6); cl.scale.setScalar(0.1 + R * (1 - (1 - t) ** 2)); if (t >= 1) { onDone && onDone(); return false; } });
+  }
+  function reset() {
+    S.anims = []; S.gen = (S.gen || 0) + 1;
+    clearExtras(); clearTags(); clearStates(); glow([]); if (S.nerves && T) dimNerves(null);
+    S.onPick = null; S.onHover = null; S.pickKind = 'all'; if (T) { showNerves(true); showLandmarks(false); }
+  }
+  function poseJaw() { const d = S.openDeg; jaw.rotation.x = d * Math.PI / 180; jaw.position.set(JAW_PIVOT[0], JAW_PIVOT[1] - 0.12 * d, JAW_PIVOT[2] + 0.42 * d); }
+  function look(p, t) { camera.position.set(...p); controls.target.set(...t); controls.update(); }
+  function flyTo(p, t, dur = 0.9) { const p1 = p.isVector3 ? p.clone() : v3(p), t1 = t.isVector3 ? t.clone() : v3(t); if (window.__nbtFast) { camera.position.copy(p1); controls.target.copy(t1); controls.update(); return; } S.fly = { t: 0, dur, p0: camera.position.clone(), p1, t0: controls.target.clone(), t1 }; }
+  return { look, flyTo, mount, init, go, setOpen, setBone, setSoft, setState, clearStates, glow, dimNerves, showNerves, showLandmarks, tag, clearTags, marker, clearExtras, placeSyringe, deposit, world, reset,
+    get S() { return S; }, get ready() { return ready; }, get T() { return T; } };
+})();
+
+/* ------------------------------------------------------------------ 3D shared bits */
+function stage3d(root, sideEl) {
+  const holder = h('div', { class: 'card v3d-card' });
+  const stage = h('div', { class: 'stage stage3d' }, holder, sideEl);
+  root.append(stage);
+  const unmount = Viewer.mount(holder);
+  return { stage, holder, unmount };
+}
+function nerveName(k) { const d = Viewer.S.nerveData; return d && d[k] ? d[k].name : k; }
+function blocksForNerve(k) { return Object.entries(NERVE_BY_BLOCK).filter(([, v]) => v.includes(k)).map(([b]) => B[b].full); }
+function toothLabel(n) { const q = n <= 8 ? 'UR' : n <= 16 ? 'UL' : n <= 24 ? 'LL' : 'LR'; const i = q === 'UR' ? 8 - n : q === 'UL' ? n - 9 : q === 'LL' ? 24 - n : n - 25; return `#${n} ${QN[q]} ${TNAME[TYPES[i]]}`; }
+function pulpNerve(n) {
+  const q = n <= 8 ? 'UR' : n <= 16 ? 'UL' : n <= 24 ? 'LL' : 'LR'; const i = q === 'UR' ? 8 - n : q === 'UL' ? n - 9 : q === 'LL' ? 24 - n : n - 25; const t = TYPES[i];
+  if (n <= 16) return t === 'M1' ? 'PSA (MB root often MSA)' : t.startsWith('M') ? 'PSA' : t.startsWith('PM') ? 'MSA if present, otherwise ASA/PSA' : 'ASA';
+  return t.startsWith('M') ? 'Inferior alveolar' : 'Inferior alveolar via the incisive branch';
+}
+
+/* ------------------------------------------------------------------ Nerve Finder */
+function NerveFinder(root) {
+  let mode = store.get('finderMode', 'explore');
+  const ROUND = 10;
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Mode' },
+    [['explore', 'Explore'], ['find', 'Find it'], ['name', 'Name it']].map(([id, t]) => h('button', { type: 'button', 'aria-pressed': mode === id, 'data-m': id, onclick: () => setMode(id) }, t)));
+  root.append(intro('Nerve Finder', 'A 3D skull with the trigeminal branches in place. Drag to rotate, pinch or scroll to zoom, and slide Bone down to see the nerves inside their canals.', seg));
+  const side = h('div', { class: 'card side' });
+  const { unmount } = stage3d(root, side);
+  let qs, idx, score, missed;
+  function setMode(m) { mode = m; store.set('finderMode', m); seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); start(); }
+  function items() {
+    const nerves = Object.keys(Viewer.S.nerveData || {}).map(k => ({ kind: 'nerve', id: k, name: nerveName(k) }));
+    const lms = LANDMARKS.map(l => ({ kind: 'lm', id: l.id, name: l.name, lm: l }));
+    return [...nerves, ...lms];
+  }
+  async function start() {
+    side.replaceChildren(h('p', { class: 'hint' }, 'Loading the 3D model…'));
+    try { await Viewer.init(); } catch (e) { side.replaceChildren(h('p', { class: 'hint' }, 'The 3D model could not load here. The text games still work.')); return; }
+    Viewer.reset(); Viewer.setBone(mode === 'explore' ? 0.35 : 0.3); Viewer.setSoft(true); Viewer.setOpen(6); Viewer.go('right');
+    if (mode === 'explore') return explore();
+    qs = shuffle(items().filter(it => mode === 'find' || it.kind === 'nerve')).slice(0, ROUND); idx = 0; score = 0; missed = []; next();
+  }
+  function explore() {
+    Viewer.showLandmarks(true); Viewer.S.pickKind = 'all';
+    const info = h('div', { class: 'fb' }, h('strong', null, 'Tap anything'), h('p', null, 'Nerves, teeth and the blue landmark rings all respond. Try the Palate and Inside ramus views.'));
+    side.replaceChildren(h('div', { class: 'prompt' }, 'Explore the anatomy'), h('p', { class: 'hint' }, 'Hover or tap to identify. Everything on the right side is mirrored on the left.'), info,
+      h('div', { class: 'legend' }, h('span', null, h('i', { class: 'lg-sel' }), 'nerve'), h('span', null, h('i', { class: 'lg-ring' }), 'landmark')));
+    let hoverTag = null;
+    Viewer.S.onHover = (hit) => {
+      if (hoverTag) { hoverTag.e.remove(); Viewer.S.tags = Viewer.S.tags.filter(t => t !== hoverTag); hoverTag = null; }
+      if (!hit) return; const label = hit.nerve ? nerveName(hit.nerve) : hit.landmark ? LANDMARKS.find(l => l.id === hit.landmark).name : hit.target && hit.target.startsWith('p') ? toothLabel(+hit.target.slice(1)) : null;
+      if (label) hoverTag = Viewer.tag(hit.point, label, 'hover');
+    };
+    Viewer.S.onPick = hit => {
+      if (!hit) return;
+      Viewer.glow(hit.nerve ? [hit.nerve] : []);
+      if (hit.nerve) { const d = Viewer.S.nerveData[hit.nerve]; const bl = blocksForNerve(hit.nerve);
+        info.replaceChildren(h('strong', null, d.name), h('p', null, h('span', { class: 'mono' }, d.div + ' · '), d.info), bl.length ? h('p', null, 'Blocked by: ' + bl.join(', ')) : null); }
+      else if (hit.landmark) { const l = LANDMARKS.find(x => x.id === hit.landmark); info.replaceChildren(h('strong', null, l.name), h('p', null, l.info)); }
+      else if (hit.target && hit.target.startsWith('p')) { const n = +hit.target.slice(1); info.replaceChildren(h('strong', null, toothLabel(n)), h('p', null, 'Pulp supplied by: ' + pulpNerve(n) + '.')); }
+      else if (hit.target) { const n = +hit.target.slice(1); info.replaceChildren(h('strong', null, (hit.target[0] === 'b' ? 'Buccal/labial' : n <= 16 ? 'Palatal' : 'Lingual') + ' gingiva'), h('p', null, toothLabel(n))); }
+      else if (hit.bone) info.replaceChildren(h('strong', null, hit.bone.replace('bone_', '').replace(/_r$/, ' (right)').replace(/_l$/, ' (left)').replace(/^./, c => c.toUpperCase())), h('p', null, 'Slide Bone down to see what runs inside.'));
+    };
+  }
+  function next() {
+    Viewer.clearExtras(); Viewer.clearTags(); Viewer.glow([]); Viewer.dimNerves(null);
+    if (idx >= qs.length) { side.replaceChildren(endCard(score, qs.length, missed, start, 'finder-' + mode)); return; }
+    const it = qs[idx]; const res = h('div');
+    const nextBtn = () => h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next' : 'See results'));
+    if (mode === 'find') {
+      Viewer.showLandmarks(it.kind === 'lm'); Viewer.S.pickKind = it.kind === 'lm' ? 'landmark' : 'nerve';
+      Viewer.setBone(it.kind === 'lm' ? 1 : 0.3);
+      if (it.kind === 'lm') Viewer.go(it.lm.view);
+      side.replaceChildren(progress(idx, qs.length, score), h('div', { class: 'prompt' }, 'Tap the ', h('em', null, it.name), '.'),
+        h('p', { class: 'hint' }, it.kind === 'lm' ? 'Blue rings mark candidate landmarks. Rotate if you need to.' : 'Either side counts. Slide Bone down to see nerves inside bone.'), res);
+      let done = false;
+      Viewer.S.onPick = hit => {
+        if (done || !hit) return;
+        let got = it.kind === 'lm' ? hit.landmark : hit.nerve;
+        if (it.kind === 'lm' && !got && hit.point) { // accept taps on bone within 7 mm of a landmark
+          let best = null, bd = 7;
+          for (const l of LANDMARKS) for (const mir of (l.mirror ? [1, -1] : [1])) { const d = hit.point.distanceTo(Viewer.world([l.p[0] * mir, l.p[1], l.p[2]], l.jaw)); if (d < bd) { bd = d; best = l.id; } }
+          got = best;
+          if (!got) { Viewer.tag(hit.point, 'No landmark here', 'bad'); setTimeout(() => Viewer.clearTags(), 900); return; }
+        }
+        if (!got) return;
+        done = true; const ok = got === it.id;
+        if (ok) score++; else missed.push(`${it.name}: ${it.kind === 'lm' ? it.lm.info : Viewer.S.nerveData[it.id].info}`);
+        record(ok);
+        if (it.kind === 'nerve') { Viewer.glow([it.id]); Viewer.dimNerves([it.id, ...(ok ? [] : [got])]); }
+        else { const lm = it.lm; Viewer.marker(Viewer.world(lm.p, lm.jaw), '#2b7a57', 3.5); }
+        Viewer.tag(hit.point, ok ? it.name : (it.kind === 'lm' ? LANDMARKS.find(l => l.id === got).name : nerveName(got)), ok ? 'good' : 'bad');
+        res.append(feedback(ok, ok ? 'Correct' : `That was the ${(it.kind === 'lm' ? LANDMARKS.find(l => l.id === got).name : nerveName(got)).toLowerCase()}`, it.kind === 'lm' ? it.lm.info : Viewer.S.nerveData[it.id].info), nextBtn());
+      };
+    } else {
+      Viewer.showLandmarks(false); Viewer.S.pickKind = 'none'; Viewer.S.onPick = null; Viewer.setBone(0.28);
+      Viewer.glow([it.id]); Viewer.dimNerves([it.id]);
+      const others = shuffle(Object.keys(Viewer.S.nerveData).filter(k => k !== it.id)).slice(0, 3).map(nerveName);
+      const m = mcq(shuffle([it.name, ...others]), it.name, ok => {
+        if (ok) score++; else missed.push(`${it.name}: ${Viewer.S.nerveData[it.id].info}`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'Correct' : `It’s the ${it.name.toLowerCase()}`, Viewer.S.nerveData[it.id].info), nextBtn());
+      });
+      side.replaceChildren(progress(idx, qs.length, score), h('div', { class: 'prompt' }, 'Which nerve is glowing?'), h('p', { class: 'hint' }, 'Rotate to follow its course. Keys 1–4 answer.'), m, res);
+      if (offKeys) offKeys(); offKeys = bindKeys(m.keyHandler);
+    }
+  }
+  let offKeys = null;
+  start();
+  return () => { if (offKeys) offKeys(); unmount(); };
+}
+
+/* ------------------------------------------------------------------ Numb Map (3D) */
+function NumbMap3D(root) {
   let mode = store.get('numbMode', 'paint');
   const ROUND = 8;
-  let order, idx, score, missed, sel, checked;
   const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Mode' },
     h('button', { type: 'button', 'aria-pressed': mode === 'paint', onclick: () => setMode('paint') }, 'Paint the numb zone'),
     h('button', { type: 'button', 'aria-pressed': mode === 'name', onclick: () => setMode('name') }, 'Name the block'));
-  root.append(intro('Numb Map', 'Tap every tooth (pulp) and gingival band a block anesthetizes, plus any skin or tongue it reaches. Or flip it: read the zone and name the block.', seg));
-  const stage = h('div', { class: 'stage numb' }); root.append(stage);
-  let offKeys = null;
+  root.append(intro('Numb Map', 'Tap each tooth (pulp) and gingival segment a block anesthetizes on the 3D jaws, plus any lip, eyelid, nose, chin or tongue areas. Or read a numb zone and name the block.', seg));
+  const side = h('div', { class: 'card side' });
+  const { unmount } = stage3d(root, side);
+  let order, idx, score, missed, sel, checked, offKeys = null;
   function setMode(m) { mode = m; store.set('numbMode', m); seg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', (i === 0) === (m === 'paint'))); start(); }
-  function start() { order = shuffle(ZONES).slice(0, ROUND); idx = 0; score = 0; missed = []; next(); }
+  async function start() {
+    side.replaceChildren(h('p', { class: 'hint' }, 'Loading the 3D model…'));
+    try { await Viewer.init(); } catch (e) { side.replaceChildren(h('p', { class: 'hint' }, 'The 3D model could not load here.')); return; }
+    order = shuffle(ZONES).slice(0, ROUND); idx = 0; score = 0; missed = []; next();
+  }
+  const has = t => t.startsWith('x_') || !!Viewer.S.targets[t];
   function next() {
     if (offKeys) { offKeys(); offKeys = null; }
-    stage.replaceChildren();
-    if (idx >= order.length) { stage.append(endCard(score, order.length, missed, start, 'numb-' + mode)); return; }
+    Viewer.reset(); Viewer.setBone(1); Viewer.setSoft(true); Viewer.showNerves(false);
+    if (idx >= order.length) { side.replaceChildren(endCard(score, order.length, missed, start, 'numb3d-' + mode)); return; }
     const z = order[idx]; sel = new Set(); checked = false;
-    const up = buildArch('U', { ro: mode === 'name' }), lo = buildArch('L', { ro: mode === 'name' });
-    const nodes = Object.assign({}, up.nodes, lo.nodes);
+    const key = Object.fromEntries(Object.entries(z.key).filter(([t]) => has(t)));
+    const arch = B[z.block].arch === 'mand' || z.variant === 'mand' ? 'lower' : 'palate';
+    const needsBuccal = Object.keys(key).some(t => t[0] === 'b');
+    Viewer.setOpen(24); Viewer.go(needsBuccal && !Object.keys(key).some(t => t[0] === 'l') ? (arch === 'lower' ? 'lowerFront' : 'upperFront') : arch);
     const extras = {};
     const exRow = h('div', { class: 'extras' }, h('span', { class: 'lab' }, 'Also numb?'),
       EXTRAS.map(x => { const b = h('button', { type: 'button', class: 'xt', 'aria-pressed': 'false', onclick: () => toggle('x_' + x.id) }, x.label); extras['x_' + x.id] = b; return b; }));
-    const legend = h('div', { class: 'legend' },
-      mode === 'paint'
-        ? [h('span', null, h('i', { class: 'lg-sel' }), 'your pick'), h('span', null, h('i', { class: 'lg-hit' }), 'correct'), h('span', null, h('i', { class: 'lg-miss' }), 'missed'), h('span', null, h('i', { class: 'lg-wrong' }), 'not numb'), h('span', null, h('i', { class: 'lg-var' }), 'variable (either is fine)'), h('span', null, h('i', { class: 'lg-gum' }), 'gingiva band')]
-        : [h('span', null, h('i', { class: 'lg-sel' }), 'anesthetized'), h('span', null, h('i', { class: 'lg-var' }), 'variable'), h('span', null, h('i', { class: 'lg-gum' }), 'gingiva band')]);
-    const mapCard = h('div', { class: 'card mapcard' },
-      h('div', { class: 'mprompt' }, mode === 'paint'
-        ? ['Paint what goes numb: ', h('em', null, B[z.block].full), z.side ? ' ' + z.side : '', '. Check is below.']
-        : 'Which block produces this numb zone? Answers are below.'),
-      h('div', { class: 'maps' },
-        h('figure', null, h('figcaption', null, h('span', null, 'Maxilla'), h('span', null, 'occlusal')), up.svg),
-        h('figure', null, h('figcaption', null, h('span', null, 'Mandible'), h('span', null, 'occlusal')), lo.svg)),
-      exRow, legend);
-    const side = h('div', { class: 'card side' }, progress(idx, order.length, score));
-    stage.append(mapCard, side);
-
+    const views = h('div', { class: 'row' }, h('span', { class: 'hint' }, 'Jump to:'),
+      [['palate', 'Upper arch'], ['lower', 'Lower arch'], ['upperFront', 'Upper buccal'], ['lowerFront', 'Lower buccal'], ['right', 'Side']].map(([v, t]) => h('button', { class: 'chip', type: 'button', onclick: () => Viewer.go(v) }, t)));
+    const setX = (t, st) => { const b = extras[t]; b.className = 'xt' + (st ? ' ' + st : ''); };
     function toggle(t) {
       if (checked || mode !== 'paint') return;
-      const el = nodes[t] || extras[t];
-      if (sel.has(t)) { sel.delete(t); el.classList.remove('sel'); } else { sel.add(t); el.classList.add('sel'); }
-      if (extras[t]) el.setAttribute('aria-pressed', sel.has(t));
-      if (nodes[t]) el.setAttribute('aria-pressed', sel.has(t));
+      if (sel.has(t)) sel.delete(t); else sel.add(t);
+      if (t.startsWith('x_')) { setX(t, sel.has(t) ? 'sel' : ''); extras[t].setAttribute('aria-pressed', sel.has(t)); }
+      else Viewer.setState(t, sel.has(t) ? 'sel' : null);
       countEl.textContent = `${sel.size} selected`;
     }
-    const onSvg = e => { const t = e.target.closest('[data-t]'); if (t) toggle(t.dataset.t); };
-    const onSvgKey = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-t]')) { e.preventDefault(); toggle(e.target.closest('[data-t]').dataset.t); } };
-    [up.svg, lo.svg].forEach(v => { v.addEventListener('click', onSvg); v.addEventListener('keydown', onSvgKey); });
-
     const countEl = h('span', { class: 'hint mono' }, '0 selected');
+    const res = h('div');
     if (mode === 'paint') {
-      const b = B[z.block];
-      side.append(
-        h('div', { class: 'prompt' }, 'Paint what goes numb after a ', h('em', null, b.full), z.side ? ' ' + z.side : '', '.'),
-        h('p', { class: 'hint' }, 'Tooth = pulpal anesthesia. Outer band = buccal/labial gingiva. Inner band = palatal/lingual gingiva. Variable areas are not scored.'));
-      const res = h('div');
+      Viewer.S.pickKind = 'solid';
+      Viewer.S.onPick = hit => { if (hit && hit.target) toggle(hit.target); };
       const checkBtn = h('button', { class: 'btn', type: 'button', onclick: check }, 'Check');
-      const clearBtn = h('button', { class: 'btn ghost', type: 'button', onclick: () => { [...sel].forEach(toggle); } }, 'Clear');
-      side.append(h('div', { class: 'row' }, checkBtn, clearBtn, countEl), res);
+      const clearBtn = h('button', { class: 'btn ghost', type: 'button', onclick: () => [...sel].forEach(toggle) }, 'Clear');
+      side.replaceChildren(progress(idx, order.length, score),
+        h('div', { class: 'prompt' }, 'Paint what goes numb after a ', h('em', null, B[z.block].full), z.side ? ' ' + z.side : '', '.'),
+        h('p', { class: 'hint' }, 'Tap a tooth for pulpal anesthesia. Tap the gum beside it for the buccal or palatal/lingual gingiva. Third molars aren’t in this model; variable areas aren’t scored.'),
+        views, exRow, h('div', { class: 'row' }, checkBtn, clearBtn, countEl),
+        h('div', { class: 'legend' }, h('span', null, h('i', { class: 'lg-sel' }), 'your pick'), h('span', null, h('i', { class: 'lg-hit' }), 'correct'), h('span', null, h('i', { class: 'lg-miss' }), 'missed'), h('span', null, h('i', { class: 'lg-wrong' }), 'not numb'), h('span', null, h('i', { class: 'lg-var' }), 'variable')),
+        res);
       function check() {
         if (checked) return; checked = true;
         let hit = 0, miss = 0, wrong = 0, req = 0;
-        const all = Object.assign({}, nodes, extras);
-        for (const [t, el] of Object.entries(all)) {
-          const lvl = z.key[t], on = sel.has(t);
-          el.classList.remove('sel');
-          if (lvl === 'req') { req++; if (on) { hit++; el.classList.add('hit'); } else { miss++; el.classList.add('miss'); } }
-          else if (lvl === 'opt') el.classList.add(on ? 'varsel' : 'var');
-          else if (on) { wrong++; el.classList.add('wrong'); }
+        const all = new Set([...Object.keys(Viewer.S.targets), ...Object.keys(extras)]);
+        for (const t of all) {
+          const lvl = key[t], on = sel.has(t); let st = null;
+          if (lvl === 'req') { req++; if (on) { hit++; st = 'hit'; } else { miss++; st = 'miss'; } }
+          else if (lvl === 'opt') st = on ? 'varsel' : 'var';
+          else if (on) { wrong++; st = 'wrong'; }
+          if (t.startsWith('x_')) setX(t, st); else Viewer.setState(t, st);
         }
         const ok = miss === 0 && wrong === 0;
         if (ok) score++; else missed.push(`${zoneTitle(z)}: ${z.why}`);
@@ -862,168 +1256,111 @@ function NumbMap(root) {
           h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < order.length ? 'Next block' : 'See results')));
         checkBtn.disabled = true; clearBtn.disabled = true;
       }
-      offKeys = bindKeys(e => { if (e.key === 'Enter' && !checked && !e.target.closest('[data-t]') && !e.target.closest('button')) check(); });
     } else {
-      paintKey(nodes, extras, z.key);
+      Viewer.S.onPick = null;
+      for (const [t, lvl] of Object.entries(key)) { if (t.startsWith('x_')) setX(t, lvl === 'req' ? 'req' : 'var'); else Viewer.setState(t, lvl === 'req' ? 'req' : 'var'); }
       Object.values(extras).forEach(b => { b.disabled = true; });
       const correct = B[z.block].full;
-      const pool = shuffle(BLOCKS.filter(b => b.full !== correct && compatible(b.id, z.block))).slice(0, 3).map(b => b.full);
-      const opts = shuffle([correct, ...pool]);
-      const res = h('div');
+      const opts = shuffle([correct, ...shuffle(BLOCKS.filter(b => b.full !== correct && compatible(b.id, z.block))).slice(0, 3).map(b => b.full)]);
       const m = mcq(opts, correct, ok => {
         if (ok) score++; else missed.push(`${zoneTitle(z)}: ${z.why}`);
         record(ok);
         res.append(feedback(ok, ok ? 'Correct' : `It was the ${correct}${z.side ? ' ' + z.side : ''}`, z.why),
           h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < order.length ? 'Next zone' : 'See results')));
       });
-      side.append(h('div', { class: 'prompt' }, 'Which block produces this numb zone?'),
-        h('p', { class: 'hint' }, 'Yellow is anesthetized; dashed is variable. Lip, eyelid, nose, chin and tongue chips below the maps count too.'), m, res);
+      side.replaceChildren(progress(idx, order.length, score), h('div', { class: 'prompt' }, 'Which block produces this numb zone?'),
+        h('p', { class: 'hint' }, 'Yellow is anesthetized, pale is variable. Rotate to check the palatal, lingual and buccal sides.'), views, exRow, m, res);
       offKeys = bindKeys(m.keyHandler);
     }
   }
   start();
-  return () => { if (offKeys) offKeys(); };
+  return () => { if (offKeys) offKeys(); unmount(); };
 }
 
-/* ------------------------------------------------------------------ Specimen Lab */
-function SpecimenLab(root) {
-  let plateSel = store.get('labPlate', 'all');
-  const ROUND = 10;
+/* ------------------------------------------------------------------ Needle Lab */
+const SITE_BLOCKS = ['psa', 'msa', 'asa', 'io', 'supra', 'np', 'gp', 'ianb', 'lb', 'mental'];
+function NeedleLab(root, opts) {
+  let mode = (opts && opts.demo) ? 'demo' : store.get('needleMode', 'place');
+  let demoBlock = (opts && opts.demo) || store.get('needleDemo', 'ianb');
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Mode' },
+    [['place', 'Place the needle'], ['name', 'Name the block'], ['demo', 'Watch a block']].map(([id, t]) => h('button', { type: 'button', 'aria-pressed': mode === id, 'data-m': id, onclick: () => setMode(id) }, t)));
+  root.append(intro('Needle Lab', 'Tap where the needle goes in. The syringe then advances to the deposition site, the anesthetic spreads, the blocked nerve lights up and the teeth it supplies go numb.', seg));
+  const side = h('div', { class: 'card side' });
+  const { unmount } = stage3d(root, side);
   let qs, idx, score, missed, offKeys = null;
-  const chooser = h('div', { class: 'chooser', role: 'group', 'aria-label': 'Specimen' },
-    [['all', 'All specimens'], ...PLATES.map(p => [p.id, p.title.split(',')[0]]), ['photo', 'Intraoral photos']]
-      .map(([id, t]) => h('button', { class: 'chip', type: 'button', 'aria-pressed': plateSel === id, 'data-id': id, onclick: () => { plateSel = id; store.set('labPlate', id); chooser.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id)); start(); } }, t)));
-  root.append(intro('Specimen Lab', 'Labels have been removed from the lecture’s dissections and photos. Tap the pin for a named structure, name a highlighted pin, or tap the injection site on a real mouth.'),
-    h('div', { style: 'margin:-4px 0 14px' }, chooser));
-  const stage = h('div', { class: 'stage' }); root.append(stage);
-  function build() {
-    const out = [];
-    const plates = plateSel === 'all' ? PLATES : PLATES.filter(p => p.id === plateSel);
-    if (plateSel !== 'photo') for (const p of plates) for (const pin of p.pins) out.push({ kind: Math.random() < .5 ? 'find' : 'name', plate: p, pin });
-    if (plateSel === 'all' || plateSel === 'photo') for (const t of TAPS) out.push({ kind: 'tap', t });
-    let sh = shuffle(out);
-    if (plateSel === 'all') { // make sure a couple of photo taps appear
-      const taps = sh.filter(q => q.kind === 'tap').slice(0, 3), rest = sh.filter(q => q.kind !== 'tap').slice(0, ROUND - taps.length);
-      sh = shuffle([...rest, ...taps]);
-    }
-    return sh.slice(0, plateSel === 'photo' ? TAPS.length : ROUND);
+  function setMode(m) { mode = m; store.set('needleMode', m); seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); start(); }
+  async function start() {
+    side.replaceChildren(h('p', { class: 'hint' }, 'Loading the 3D model…'));
+    try { await Viewer.init(); } catch (e) { side.replaceChildren(h('p', { class: 'hint' }, 'The 3D model could not load here.')); return; }
+    if (mode === 'demo') return demo(demoBlock);
+    qs = shuffle(SITE_BLOCKS).slice(0, 8); idx = 0; score = 0; missed = []; next();
   }
-  function start() { qs = build(); idx = 0; score = 0; missed = []; next(); }
+  function setup(id) {
+    const site = SITES[id];
+    Viewer.reset(); Viewer.setSoft(true); Viewer.setBone(1); Viewer.setOpen(site.open, false, true); Viewer.go(site.view);
+    if (site.cam) { const t = Viewer.world(site.tip, site.jaw); Viewer.flyTo(t.clone().add(new Viewer.T.Vector3(...site.cam)), t); }
+  }
+  function technique(id) {
+    const b = B[id];
+    return h('dl', { class: 'tech' }, ...[['Entry', b.height], ['Angle', b.angle], ['Depth', b.depth], ['Aspirate', b.aspirate], ['Pulps', b.pulp], ['Soft tissue', b.soft]].filter(r => r[1]).flatMap(([k, v]) => [h('dt', null, k), h('dd', null, v)]));
+  }
+  function numbTeeth(id) {
+    const z = ZONES.find(z => z.block === id && !z.variant); if (!z) return;
+    let i = 0;
+    const gen = Viewer.S.gen;
+    for (const [t, lvl] of Object.entries(z.key)) { if (t.startsWith('x_') || !Viewer.S.targets[t]) continue; const d = i++ * 60; setTimeout(() => { if (Viewer.S.gen === gen) Viewer.setState(t, lvl === 'req' ? 'req' : 'var'); }, d); }
+  }
+  function play(id, then) {
+    Viewer.placeSyringe(id, true, () => Viewer.deposit(id, () => { Viewer.glow(NERVE_BY_BLOCK[id]); numbTeeth(id); then && then(); }));
+  }
+  function demo(id) {
+    demoBlock = id; store.set('needleDemo', id);
+    setup(id); Viewer.setBone(id === 'ianb' || id === 'v2' ? 0.45 : 0.6);
+    const chips = h('div', { class: 'chooser' }, [...SITE_BLOCKS, 'incisive', 'v2'].map(b => h('button', { class: 'chip', type: 'button', 'aria-pressed': b === id, onclick: () => demo(b) }, B[b].name)));
+    side.replaceChildren(h('div', { class: 'prompt' }, B[id].full), h('p', { class: 'hint' }, B[id].nerve), chips, technique(id),
+      B[id].pearl ? h('div', { class: 'pearl' }, B[id].pearl) : null,
+      h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => demo(id) }, 'Replay')));
+    const gen = Viewer.S.gen; setTimeout(() => { if (Viewer.S.gen === gen) play(id); }, 700);
+  }
   function next() {
     if (offKeys) { offKeys(); offKeys = null; }
-    stage.replaceChildren();
-    if (idx >= qs.length) { stage.append(endCard(score, qs.length, missed, start, 'lab-' + plateSel)); return; }
-    const q = qs[idx];
-    const side = h('div', { class: 'card side' }, progress(idx, qs.length, score));
-    const res = h('div');
-    const nextBtn = () => h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next' : 'See results'));
-    if (q.kind === 'tap') {
-      const t = q.t;
-      const frame = h('div', { class: 'frame tapmode' }, h('img', { src: img(t.img), alt: t.title, draggable: 'false' }));
-      const card = h('div', { class: 'card plate' }, h('div', { class: 'platehead' }, h('h3', null, t.title), h('span', { class: 'src' }, t.src)), frame);
-      stage.append(card, side);
-      side.append(h('div', { class: 'prompt' }, t.q), h('p', { class: 'hint' }, 'Tap directly on the photo.'), res);
+    if (idx >= qs.length) { Viewer.reset(); side.replaceChildren(endCard(score, qs.length, missed, start, 'needle-' + mode)); return; }
+    const id = qs[idx]; setup(id); const res = h('div');
+    const nextBtn = () => h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next block' : 'See results'));
+    if (mode === 'place') {
+      Viewer.S.pickKind = 'solid';
+      side.replaceChildren(progress(idx, qs.length, score), h('div', { class: 'prompt' }, 'Tap the needle insertion point for the ', h('em', null, B[id].full), ' on the patient’s right.'),
+        h('p', { class: 'hint' }, 'Rotate or use the view buttons first if you need to. The jaw is opened for you.'), res);
       let done = false;
-      frame.addEventListener('click', e => {
-        if (done) return; done = true;
-        const r = frame.getBoundingClientRect();
-        const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
-        const ok = t.shapes.some(sh => sh.r != null
-          ? Math.hypot((fx - sh.x) * r.width, (fy - sh.y) * r.height) <= sh.r * r.width
-          : fx >= sh.x0 && fx <= sh.x1 && fy >= sh.y0 && fy <= sh.y1);
-        frame.classList.remove('tapmode');
-        for (const sh of t.shapes) {
-          if (sh.r != null) frame.append(h('div', { class: 'mark', style: `left:${sh.x * 100}%;top:${sh.y * 100}%;width:${sh.r * 200}%;aspect-ratio:1` }));
-          else frame.append(h('div', { class: 'markrect', style: `left:${sh.x0 * 100}%;top:${sh.y0 * 100}%;width:${(sh.x1 - sh.x0) * 100}%;height:${(sh.y1 - sh.y0) * 100}%` }));
-        }
-        frame.append(h('div', { class: 'tapdot ' + (ok ? 'good' : 'bad'), style: `left:${fx * 100}%;top:${fy * 100}%` }));
-        if (ok) score++; else missed.push(`${t.q} ${t.why}`);
+      Viewer.S.onPick = hit => {
+        if (done || !hit) return; done = true;
+        const site = SITES[id]; const entry = Viewer.world(site.tap || site.entry, site.jaw);
+        const d = hit.point.distanceTo(entry); const ok = d <= site.tol;
+        Viewer.marker(hit.point, ok ? '#2b7a57' : '#c0392f', 1.6); Viewer.marker(entry, '#2b7a57', site.tol * 0.55);
+        Viewer.tag(entry, 'Entry', 'good');
+        if (ok) score++; else missed.push(`${B[id].full}: ${B[id].height}.`);
         record(ok);
-        res.append(feedback(ok, ok ? 'On target' : 'Not quite: the green zone is the target', t.why));
-        if (t.reveal) res.append(h('figure', { style: 'margin:12px 0 0' }, h('img', { src: img(t.reveal), alt: 'IANB technique photo with the target marked', style: 'width:100%;border-radius:6px' }), h('figcaption', { class: 'src', style: 'margin-top:4px' }, 'Lecture photo: target marked 6–10 mm above the occlusal plane')));
+        res.append(feedback(ok, ok ? `On target (${d.toFixed(0)} mm away)` : `${d.toFixed(0)} mm off: the green zone is the entry`, B[id].height + '.'), technique(id));
+        play(id, () => res.append(nextBtn()));
+      };
+    } else {
+      Viewer.S.onPick = null;
+      Viewer.placeSyringe(id, false);
+      const correct = B[id].full;
+      const opts = shuffle([correct, ...shuffle(SITE_BLOCKS.filter(b => b !== id && compatible(b, id))).slice(0, 3).map(b => B[b].full)]);
+      const m = mcq(opts, correct, ok => {
+        if (ok) score++; else missed.push(`${correct}: ${B[id].height}.`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'Correct' : `It’s the ${correct.charAt(0).toLowerCase() + correct.slice(1)}`, B[id].height + '.'), technique(id));
+        Viewer.deposit(id, () => { Viewer.glow(NERVE_BY_BLOCK[id]); numbTeeth(id); });
         res.append(nextBtn());
       });
-      return;
-    }
-    const p = q.plate;
-    const frame = h('div', { class: 'frame' }, h('img', { src: img(p.img), alt: p.title + ' (labels removed)', draggable: 'false' }));
-    const card = h('div', { class: 'card plate' }, h('div', { class: 'platehead' }, h('h3', null, p.title), h('span', { class: 'src' }, p.src)), frame);
-    stage.append(card, side);
-    const pins = p.pins.map((pin, i) => {
-      const b = h('button', { class: 'pin', type: 'button', style: `left:${pin.x * 100}%;top:${pin.y * 100}%`, 'aria-label': `Pin ${i + 1}` }, String(i + 1));
-      frame.append(b); return b;
-    });
-    const target = p.pins.indexOf(q.pin);
-    const tagAt = (i, cls) => { const pin = p.pins[i]; frame.append(h('div', { class: 'tag' + (pin.y < .12 ? ' below' : ''), style: `left:${Math.min(Math.max(pin.x, .16), .84) * 100}%;top:${pin.y * 100}%` }, pin.l)); };
-    if (q.kind === 'find') {
-      side.append(h('div', { class: 'prompt' }, 'Tap the pin on the ', h('em', null, q.pin.l), '.'), res);
-      let done = false;
-      pins.forEach((b, i) => b.addEventListener('click', () => {
-        if (done) return; done = true;
-        const ok = i === target;
-        b.classList.add(ok ? 'good' : 'bad'); pins[target].classList.add('good');
-        tagAt(target); if (!ok) tagAt(i);
-        if (ok) score++; else missed.push(`${q.pin.l} (${p.title}): ${q.pin.i}`);
-        record(ok);
-        res.append(feedback(ok, ok ? 'Correct' : `That was the ${p.pins[i].l.toLowerCase()}`, q.pin.i), nextBtn());
-      }));
-    } else {
-      pins[target].classList.add('focus');
-      pins.forEach((b, i) => { if (i !== target) b.style.opacity = .55; b.tabIndex = -1; b.style.cursor = 'default'; });
-      const others = shuffle(p.pins.filter(x => x !== q.pin)).slice(0, 3).map(x => x.l);
-      const m = mcq(shuffle([q.pin.l, ...others]), q.pin.l, ok => {
-        pins[target].classList.remove('focus'); pins[target].classList.add(ok ? 'good' : 'bad'); tagAt(target);
-        if (ok) score++; else missed.push(`${q.pin.l} (${p.title}): ${q.pin.i}`);
-        record(ok);
-        res.append(feedback(ok, ok ? 'Correct' : `It’s the ${q.pin.l.toLowerCase()}`, q.pin.i), nextBtn());
-      });
-      side.append(h('div', { class: 'prompt' }, `What is at pin ${target + 1}?`), h('p', { class: 'hint' }, 'The pulsing pin. Keys 1–4 answer.'), m, res);
+      side.replaceChildren(progress(idx, qs.length, score), h('div', { class: 'prompt' }, 'Which block is this needle giving?'), h('p', { class: 'hint' }, 'Rotate to see the angle and depth. Keys 1–4 answer.'), m, res);
       offKeys = bindKeys(m.keyHandler);
     }
   }
   start();
-  return () => { if (offKeys) offKeys(); };
-}
-
-/* ------------------------------------------------------------------ Name the Block */
-function NameTheBlock(root) {
-  let qs, idx, score, missed, offKeys = null;
-  root.append(intro('Name the Block', 'Technique photos and models from the lecture with the captions removed. Identify the injection from the needle position and the teeth highlighted.'));
-  const stage = h('div', { class: 'stage' }); root.append(stage);
-  function start() {
-    qs = shuffle([...PHOTO_ID.map(p => ({ ...p, t: 'block' })), ...shuffle(CONCEPTS).slice(0, 2).map(c => ({ ...c, t: 'concept' }))]);
-    idx = 0; score = 0; missed = []; next();
-  }
-  function next() {
-    if (offKeys) { offKeys(); offKeys = null; }
-    stage.replaceChildren();
-    if (idx >= qs.length) { stage.append(endCard(score, qs.length, missed, start, 'photo')); return; }
-    const q = qs[idx];
-    let correct, opts, prompt;
-    if (q.t === 'block') {
-      const blk = B[q.a];
-      correct = blk.full;
-      const same = BLOCKS.filter(b => b.id !== blk.id && compatible(b.id, blk.id) && (b.arch === blk.arch || b.arch === 'both' || blk.arch === 'both'));
-      const other = BLOCKS.filter(b => b.id !== blk.id && compatible(b.id, blk.id) && !same.includes(b));
-      opts = shuffle([correct, ...shuffle(same).slice(0, 3).concat(shuffle(other)).slice(0, 3).map(b => b.full)]);
-      prompt = 'Which injection is this?';
-    } else {
-      correct = q.a; opts = ['Local infiltration', 'Field block', 'Nerve block']; prompt = 'The circle marks where solution is deposited. Which technique is this?';
-    }
-    const res = h('div');
-    const side = h('div', { class: 'card side' }, progress(idx, qs.length, score), h('div', { class: 'prompt' }, prompt));
-    const m = mcq(opts, correct, ok => {
-      if (ok) score++; else missed.push(`${correct}: ${q.why}`);
-      record(ok);
-      res.append(feedback(ok, ok ? 'Correct' : `It’s the ${correct.charAt(0).toLowerCase() + correct.slice(1)}`, q.why),
-        h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next photo' : 'See results')));
-    });
-    side.append(m, res);
-    stage.append(h('div', { class: 'card photo' }, h('img', { src: img(q.img), alt: 'Injection technique (caption removed)' })), side);
-    offKeys = bindKeys(m.keyHandler);
-  }
-  start();
-  return () => { if (offKeys) offKeys(); };
+  return () => { if (offKeys) offKeys(); unmount(); };
 }
 
 /* ------------------------------------------------------------------ Technique Drill */
@@ -1228,7 +1565,8 @@ function Atlas(root) {
       h('h3', null, b.full), h('div', { class: 'nv' }, b.nerve),
       map,
       h('dl', null, row('Entry', b.height), row('Angle', b.angle), row('Depth', b.depth), row('Aspirate', b.aspirate), row('Pulps', b.pulp), row('Soft tissue', b.soft), row('Landmark', b.landmark)),
-      b.pearl ? h('div', { class: 'pearl' }, b.pearl) : null));
+      b.pearl ? h('div', { class: 'pearl' }, b.pearl) : null,
+      SITES[b.id] ? h('div', { class: 'row' }, h('button', { class: 'btn ghost', type: 'button', onclick: () => { history.replaceState(null, '', '#needle'); go('needle', { demo: b.id }); } }, 'Watch it in 3D')) : null));
   }
   root.append(grid);
   const vars = [
@@ -1253,9 +1591,10 @@ function Atlas(root) {
 function boot(data) {
   paintTally();
   const hash = location.hash.slice(1);
-  go(TABS[hash] ? hash : (data && data.tab) || store.get('tab', 'numb'));
+  go(TABS[hash] ? hash : (data && data.tab) || store.get('tab', 'finder'));
 }
 window.claude?.hot?.snapshot?.(() => ({ tab: current }));
+if (window.__nbtFast) window.__nbt = { Viewer, go };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 })();
 </script>
