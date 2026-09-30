@@ -776,7 +776,7 @@ const Viewer = (() => {
       const root = new T.Group(); scene.add(root);
       jaw = new T.Group(); jaw.position.set(...JAW_PIVOT); root.add(jaw);
       const loader = new GLTFLoader();
-      const gltf = await loader.loadAsync('model/head.glb', ev => { if (ev.total) loadEl.lastChild.textContent = `Loading the 3D skull… ${Math.round(100 * ev.loaded / ev.total)}%`; });
+      const gltf = await loader.parseAsync(await loadHead(), '');
       const mats = {
         bone: new T.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.6, clearcoat: 0.06, clearcoatRoughness: 0.6, sheen: 0.25, sheenColor: new T.Color('#fff2dc'), sheenRoughness: 0.8 }),
         tooth: new T.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.1, ior: 1.62, specularIntensity: 0.9, sheen: 0.3, sheenColor: new T.Color('#e4ecff') }),
@@ -822,6 +822,24 @@ const Viewer = (() => {
     return ready;
   }
 
+  // model/head.glb, or model/head.glb.js (base64 module) where .glb files cannot be served
+  async function loadHead() {
+    const say = t => { loadEl.lastChild.textContent = t; };
+    try {
+      const r = await fetch('model/head.glb');
+      if (r.ok && r.body && (r.headers.get('content-type') || '').indexOf('html') < 0) {
+        const total = +r.headers.get('content-length') || 0, reader = r.body.getReader(), parts = []; let got = 0;
+        for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; if (total) say(`Loading the 3D skull… ${Math.round(100 * got / total)}%`); }
+        const buf = new Uint8Array(got); let o = 0; for (const p of parts) { buf.set(p, o); o += p.length; }
+        if (buf[0] === 0x67 && buf[1] === 0x6c) return buf.buffer; // 'gl' magic
+      }
+    } catch (e) { /* fall through */ }
+    say('Loading the 3D skull…');
+    const b64 = (await import(new URL('model/head.glb.js', document.baseURI).href)).default;
+    const bin = atob(b64), buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+  }
   function taperTube(pts, r0, r1, mirror) {
     const P = pts.map(p => new T.Vector3(mirror ? -p[0] : p[0], p[1], p[2]));
     const curve = new T.CatmullRomCurve3(P, false, 'centripetal');
