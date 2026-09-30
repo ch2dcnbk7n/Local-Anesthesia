@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--ARTIFACT-START-->
+<title>Nerve Block Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: atlas plate on the left, instrument panel (prompt, answers, feedback) on the right; stacks on phones.
+   Colour follows anatomical-atlas convention: nerve yellow = anesthetized/selected, vein blue = interactive, artery red = error. */
+:root {
+  --ground: #ECF1F0;
+  --panel: #FFFFFF;
+  --panel-2: #F4F7F6;
+  --ink: #16222A;
+  --muted: #56666D;
+  --line: #D0DAD8;
+  --nerve: #E0A10F;
+  --nerve-soft: #FBEDC4;
+  --nerve-ink: #5A3F00;
+  --vein: #2A5B8A;
+  --vein-soft: #DCE8F3;
+  --artery: #C0392F;
+  --artery-soft: #F7D9D5;
+  --ok: #2B7A57;
+  --ok-soft: #D6EEE2;
+  --gum: #E7B4AF;
+  --enamel: #FBF8F0;
+  --enamel-edge: #B9AF9C;
+  --shadow: 0 1px 2px rgba(22,34,42,.06), 0 6px 20px rgba(22,34,42,.06);
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F161A; --panel: #172127; --panel-2: #1C282F; --ink: #E4EBE9; --muted: #95A6AB; --line: #2A3940;
+    --nerve: #F0BC34; --nerve-soft: #3D3317; --nerve-ink: #FBE7AE; --vein: #86B6E2; --vein-soft: #1E3346;
+    --artery: #EC6B62; --artery-soft: #43221F; --ok: #5FC493; --ok-soft: #173A2A; --gum: #7C4C4B;
+    --enamel: #E6E1D5; --enamel-edge: #8B8373; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F161A; --panel: #172127; --panel-2: #1C282F; --ink: #E4EBE9; --muted: #95A6AB; --line: #2A3940;
+  --nerve: #F0BC34; --nerve-soft: #3D3317; --nerve-ink: #FBE7AE; --vein: #86B6E2; --vein-soft: #1E3346;
+  --artery: #EC6B62; --artery-soft: #43221F; --ok: #5FC493; --ok-soft: #173A2A; --gum: #7C4C4B;
+  --enamel: #E6E1D5; --enamel-edge: #8B8373; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--vein); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); font-stretch: 78%; text-wrap: balance; margin: 0; line-height: 1.1; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.brand h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -.01em; }
+.brand h1 .y { color: var(--nerve); }
+.brand p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+.tally { display: flex; gap: 20px; }
+.tally div { display: grid; gap: 0; }
+.tally b { font-family: var(--f-display); font-stretch: 75%; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tally span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+/* nav */
+.navscroll { overflow-x: auto; margin-block: 16px 20px; scrollbar-width: thin; }
+nav.tabs { display: flex; gap: 6px; min-width: max-content; }
+.tab { border: 1px solid var(--line); background: var(--panel); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.tab small { font-family: var(--f-mono); font-size: 11px; color: var(--muted); font-weight: 400; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.tab[aria-selected="true"] small { color: var(--ground); opacity: .7; }
+
+/* game stage */
+.stage { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.stage > * { min-width: 0; }
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } .stage .side { order: -1; } .stage.numb .side { order: 0; } }
+.mprompt { display: none; font-weight: 600; font-size: 16px; line-height: 1.35; padding: 2px 4px 10px; }
+.mprompt em { font-style: normal; background: var(--nerve-soft); color: var(--nerve-ink); padding: 0 4px; border-radius: 4px; }
+@media (max-width: 860px) { .mprompt { display: block; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
+.side { padding: 18px; display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 860px) { .side { position: static; } }
+.intro { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+.intro h2 { font-size: 28px; font-weight: 750; }
+.intro p { margin: 0; color: var(--muted); max-width: 70ch; }
+.progress { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.bar { flex: 1; height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+.bar i { display: block; height: 100%; background: var(--nerve); width: 0; transition: width .3s; }
+.prompt { font-size: 19px; font-weight: 600; line-height: 1.35; }
+.prompt em { font-style: normal; background: var(--nerve-soft); color: var(--nerve-ink); padding: 0 4px; border-radius: 4px; }
+.hint { color: var(--muted); font-size: 14px; margin: 0; }
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line); background: var(--panel-2); padding: 10px 12px; border-radius: 8px; cursor: pointer; line-height: 1.35; display: flex; gap: 10px; align-items: flex-start; }
+.opt:hover:not([disabled]) { border-color: var(--vein); background: var(--vein-soft); }
+.opt .k { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-top: 2px; flex: none; }
+.opt[disabled] { cursor: default; }
+.opt.right { background: var(--ok-soft); border-color: var(--ok); }
+.opt.wrongpick { background: var(--artery-soft); border-color: var(--artery); }
+.fb { border-radius: 8px; padding: 12px 14px; font-size: 15px; border: 1px solid var(--line); background: var(--panel-2); }
+.fb.good { border-color: var(--ok); background: var(--ok-soft); }
+.fb.bad { border-color: var(--artery); background: var(--artery-soft); }
+.fb strong { display: block; font-family: var(--f-display); font-stretch: 80%; font-size: 18px; margin-bottom: 2px; }
+.fb p { margin: 4px 0 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { border: 1px solid var(--vein); background: var(--vein); color: var(--panel); padding: 9px 16px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+.btn.ghost { background: transparent; color: var(--vein); }
+.btn[disabled] { opacity: .45; cursor: default; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel-2); }
+.seg button { border: 0; background: transparent; padding: 7px 12px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: inset 0 -2px 0 var(--nerve); }
+.src { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+
+/* plates (image + pins) */
+.plate { position: relative; padding: 12px; }
+.plate .frame { position: relative; line-height: 0; border-radius: 6px; overflow: hidden; background: #fff; }
+.plate img { width: 100%; height: auto; display: block; user-select: none; -webkit-user-drag: none; }
+.plate .frame.tapmode { cursor: crosshair; }
+.pin { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--vein); background: rgba(255,255,255,.92); cursor: pointer; padding: 0; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--f-mono); font-size: 11px; font-weight: 500; color: #16222A; }
+.pin:hover { background: #DCE8F3; }
+.pin.focus { border-color: var(--nerve); background: #FBEDC4; box-shadow: 0 0 0 6px rgba(224,161,15,.35); animation: pulse 1.4s infinite; }
+.pin.good { border-color: #2B7A57; background: #D6EEE2; }
+.pin.bad { border-color: #C0392F; background: #F7D9D5; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 11px rgba(224,161,15,.12); } }
+@media (prefers-reduced-motion: reduce) { .pin.focus { animation: none; } .bar i { transition: none; } }
+.tag { position: absolute; transform: translate(-50%, calc(-100% - 20px)); background: #16222A; color: #fff; font-size: 12.5px; line-height: 1.25; padding: 4px 8px; border-radius: 5px; white-space: nowrap; pointer-events: none; font-weight: 600; }
+.tag.below { transform: translate(-50%, 20px); }
+.mark { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; border: 3px dashed #2B7A57; background: rgba(43,122,87,.18); pointer-events: none; }
+.markrect { position: absolute; border: 3px dashed #2B7A57; background: rgba(43,122,87,.14); border-radius: 8px; pointer-events: none; }
+.tapdot { position: absolute; width: 16px; height: 16px; transform: translate(-50%, -50%); border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #16222A; pointer-events: none; }
+.tapdot.good { background: #2B7A57; } .tapdot.bad { background: #C0392F; }
+.platehead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 4px 4px 10px; flex-wrap: wrap; }
+.platehead h3 { font-size: 19px; font-weight: 700; }
+.chooser { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--panel); padding: 5px 11px; border-radius: 999px; font-size: 14px; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--vein); background: var(--vein-soft); color: var(--ink); font-weight: 600; }
+
+/* numb map */
+.mapcard { padding: 14px; }
+.maps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 560px) { .maps { grid-template-columns: 1fr; } }
+.maps figure { margin: 0; }
+.maps figcaption { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .05em; padding: 0 4px 4px; }
+.maps svg { width: 100%; height: auto; display: block; }
+svg .tooth { cursor: pointer; }
+svg .tooth rect { fill: var(--enamel); stroke: var(--enamel-edge); stroke-width: 1.2; transition: fill .15s; }
+svg .tooth text { font-family: var(--f-mono); font-size: 10px; fill: var(--muted); pointer-events: none; text-anchor: middle; dominant-baseline: central; }
+svg .tooth:hover rect { stroke: var(--vein); stroke-width: 2; }
+svg .gum { fill: none; stroke: var(--gum); stroke-width: 9; stroke-linecap: round; cursor: pointer; transition: stroke .15s; pointer-events: stroke; }
+svg .gum:hover { stroke: var(--vein-soft); }
+svg .tooth.sel rect { fill: var(--nerve); stroke: var(--nerve-ink); }
+svg .tooth.sel text, svg .tooth.hit text, svg .tooth.wrong text { fill: var(--ink); }
+svg .gum.sel { stroke: var(--nerve); }
+svg .tooth.hit rect { fill: var(--ok); stroke: var(--ok); }
+svg .tooth.hit text, svg .tooth.wrong text { fill: var(--panel); }
+svg .gum.hit { stroke: var(--ok); }
+svg .tooth.miss rect { fill: var(--artery-soft); stroke: var(--artery); stroke-width: 2.4; stroke-dasharray: 4 3; }
+svg .gum.miss { stroke: var(--artery); stroke-dasharray: 3 5; stroke-linecap: butt; }
+svg .tooth.wrong rect { fill: var(--artery); stroke: var(--artery); }
+svg .gum.wrong { stroke: var(--artery); }
+svg .tooth.var rect, svg .tooth.varsel rect { fill: var(--nerve-soft); stroke: var(--nerve); stroke-width: 2; stroke-dasharray: 3 3; }
+svg .tooth.varsel rect { fill: var(--nerve); }
+svg .gum.var { stroke: var(--nerve-soft); } svg .gum.varsel { stroke: var(--nerve); stroke-dasharray: 3 4; stroke-linecap: butt; }
+svg .tooth.req rect { fill: var(--nerve); stroke: var(--nerve-ink); }
+svg .gum.req { stroke: var(--nerve); }
+svg.ro .tooth, svg.ro .gum { cursor: default; }
+svg .midline { stroke: var(--line); stroke-dasharray: 4 4; }
+svg .lbl { font-family: var(--f-mono); font-size: 9.5px; fill: var(--muted); letter-spacing: .04em; }
+svg .zone { font-family: var(--f-mono); font-size: 9px; fill: var(--muted); }
+.extras { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+.extras .lab { font-size: 12px; color: var(--muted); font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+.xt { border: 1px solid var(--line); background: var(--panel-2); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.xt.sel { background: var(--nerve); border-color: var(--nerve); color: #1c1400; font-weight: 600; }
+.xt.hit { background: var(--ok); border-color: var(--ok); color: var(--panel); }
+.xt.miss { border: 2px dashed var(--artery); background: var(--artery-soft); }
+.xt.wrong { background: var(--artery); border-color: var(--artery); color: var(--panel); }
+.xt.var, .xt.varsel { border: 2px dashed var(--nerve); background: var(--nerve-soft); }
+.xt.req { background: var(--nerve); border-color: var(--nerve); color: #1c1400; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); margin-top: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.lg-sel { background: var(--nerve); } .lg-hit { background: var(--ok); } .lg-miss { background: var(--artery-soft); border: 2px dashed var(--artery); }
+.lg-wrong { background: var(--artery); } .lg-var { background: var(--nerve-soft); border: 2px dashed var(--nerve); }
+.lg-gum { background: var(--gum); height: 6px !important; border-radius: 3px !important; }
+.score { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; }
+.score b { font-variant-numeric: tabular-nums; }
+
+/* photo ID */
+.photo { padding: 12px; }
+.photo img { width: 100%; border-radius: 6px; display: block; max-height: 64vh; object-fit: contain; background: var(--panel-2); }
+
+/* sorter */
+.tray { display: flex; flex-wrap: wrap; gap: 8px; min-height: 46px; padding: 10px; border: 1px dashed var(--line); border-radius: 8px; background: var(--panel-2); }
+.item { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 6px 10px; cursor: pointer; font-size: 14.5px; line-height: 1.3; text-align: left; }
+.item[aria-pressed="true"] { border-color: var(--nerve); box-shadow: 0 0 0 3px var(--nerve-soft); font-weight: 600; }
+.item.good { border-color: var(--ok); background: var(--ok-soft); }
+.item.bad { border-color: var(--artery); background: var(--artery-soft); }
+.item .fix { display: block; font-size: 12px; color: var(--artery); font-weight: 600; }
+.buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
+.bucket { border: 1px solid var(--line); border-radius: 9px; background: var(--panel); padding: 10px; display: grid; gap: 8px; align-content: start; min-height: 120px; }
+.bucket > button.bh { all: unset; cursor: pointer; font-family: var(--f-display); font-stretch: 80%; font-weight: 700; font-size: 16.5px; padding: 4px 6px; border-radius: 6px; border-bottom: 2px solid var(--line); }
+.bucket > button.bh:focus-visible { outline: 3px solid var(--vein); }
+.bucket.armed > button.bh { background: var(--vein-soft); border-bottom-color: var(--vein); }
+.bucket.armed { border-color: var(--vein); }
+.bucket .in { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* rapid fire */
+.clock { font-family: var(--f-display); font-stretch: 70%; font-size: 64px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.clock.low { color: var(--artery); }
+.bigscore { display: flex; gap: 28px; align-items: end; flex-wrap: wrap; }
+.bigscore div span { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.bigscore div b { font-family: var(--f-display); font-stretch: 75%; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.rf { padding: 22px; display: grid; gap: 16px; }
+.rf .prompt { font-size: 22px; }
+
+/* atlas */
+.atlas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 14px; }
+.blk { padding: 16px; display: grid; gap: 10px; align-content: start; }
+.blk h3 { font-size: 21px; }
+.blk .nv { color: var(--muted); font-size: 14px; margin-top: -4px; }
+.blk dl { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 5px 10px; margin: 0; font-size: 14.5px; }
+.blk dt { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding-top: 3px; }
+.blk dd { margin: 0; }
+.blk .pearl { font-size: 14px; background: var(--nerve-soft); color: var(--nerve-ink); border-radius: 6px; padding: 8px 10px; }
+.blk svg { width: 100%; max-width: 250px; height: auto; display: block; margin: 0 auto; }
+.tablewrap { overflow-x: auto; margin-top: 18px; }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14.5px; background: var(--panel); border-radius: var(--r); overflow: hidden; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--panel-2); }
+td.n { font-family: var(--f-mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.missed { display: grid; gap: 6px; font-size: 14px; }
+.missed div { border-left: 3px solid var(--artery); padding: 2px 0 2px 10px; }
+.foot { margin-top: 36px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">DEN-626A · Applied anatomy for local anesthesia</div>
+      <h1>Nerve Block <span class="y">Trainer</span></h1>
+      <p>Drill V2 and V3, what each block numbs, and where the needle goes, on the dissections, skulls and intraoral photos from the lecture.</p>
+    </div>
+    <div class="tally" aria-live="polite">
+      <div><b id="t-ans" class="mono">0</b><span>Answered</span></div>
+      <div><b id="t-acc" class="mono">–</b><span>Accuracy</span></div>
+      <div><b id="t-best" class="mono">0</b><span>Rapid-fire best</span></div>
+    </div>
+  </header>
+
+  <div class="navscroll">
+    <nav class="tabs" role="tablist" aria-label="Games">
+      <button class="tab" role="tab" data-tab="numb">Numb Map <small>teeth &amp; tissue</small></button>
+      <button class="tab" role="tab" data-tab="lab">Specimen Lab <small>tap the structure</small></button>
+      <button class="tab" role="tab" data-tab="photo">Name the Block <small>photo ID</small></button>
+      <button class="tab" role="tab" data-tab="drill">Technique Drill <small>height · angle · depth</small></button>
+      <button class="tab" role="tab" data-tab="sort">Branch Sort <small>pathways</small></button>
+      <button class="tab" role="tab" data-tab="rapid">Rapid Fire <small>60 s</small></button>
+      <button class="tab" role="tab" data-tab="atlas">Atlas <small>review</small></button>
+    </nav>
+  </div>
+
+  <main id="screen"></main>
+
+  <footer class="foot">
+    Content and images come from the lecture <i>Applied Anatomy for Local Anesthesia</i> (Dr. Ayesha Fahim, DEN-626A), which credits Malamed's <i>Handbook of Local Anesthesia</i> (7th ed.), Fehrenbach &amp; Herring's <i>Illustrated Anatomy of the Head and Neck</i>, Netter, Loetscher &amp; Walton (1988), and the variation meta-analyses cited in the deck. Mental and incisive block details follow Malamed. Printed labels were removed from the images for quizzing. For personal study only.
+  </footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ------------------------------------------------------------------ utils */
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    const aria = k.startsWith('aria-');
+    if (v == null || (v === false && !aria)) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true && !aria ? '' : String(v));
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function s(tag, attrs) { const el = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v); return el; }
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const img = name => `assets/${name}.jpg`;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('nbt:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('nbt:' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const stats = Object.assign({ ans: 0, ok: 0, best: 0 }, store.get('stats', {}));
+function record(correct) {
+  stats.ans++; if (correct) stats.ok++;
+  store.set('stats', stats); paintTally();
+}
+function paintTally() {
+  $('#t-ans').textContent = stats.ans;
+  $('#t-acc').textContent = stats.ans ? Math.round(100 * stats.ok / stats.ans) + '%' : '–';
+  $('#t-best').textContent = stats.best;
+}
+
+/* ------------------------------------------------------------------ data: blocks */
+const BLOCKS = [
+  { id: 'psa', name: 'PSA block', full: 'Posterior superior alveolar block', arch: 'max',
+    nerve: 'Posterior superior alveolar n. (V2), leaving the pterygopalatine fossa and running down the tuberosity',
+    height: 'MB fold above the maxillary second molar', angle: '45° to the occlusal plane: upward, inward, backward',
+    depth: '~16 mm with a short needle; stay close to bone', aspirate: 'Twice, rotating the bevel',
+    pulp: 'M3, M2 and M1 (the MB root of M1 is variable)', soft: 'Buccal periodontium and bone over the molars',
+    landmark: 'Maxillary tuberosity and hamular notch',
+    pearl: 'Bone contact means the needle is angled too far toward the midline; no resistance is expected. Over-insertion reaches the pterygoid venous plexus and causes a rapidly expanding haematoma.' },
+  { id: 'msa', name: 'MSA block', full: 'Middle superior alveolar block', arch: 'max',
+    nerve: 'Middle superior alveolar n. (if present), from the infraorbital canal',
+    height: 'MB fold above the maxillary second premolar apex', angle: 'Parallel or 20° to the occlusal plane',
+    depth: 'A few mm (3–5): tip at or just above the PM2 apex', aspirate: 'Once; if negative, deposit ~0.9 mL slowly',
+    pulp: 'PM1, PM2 and the MB root of M1', soft: 'Buccal periodontium of the premolars',
+    pearl: 'The MSA is present in ~28% (textbook) to 72% (Loetscher & Walton dissection). Premolars may be supplied by the MSA, ASA or PSA.' },
+  { id: 'asa', name: 'ASA block', full: 'Anterior superior alveolar block (canine fossa)', arch: 'max',
+    nerve: 'Anterior superior alveolar n., running in the anterior wall of the maxillary sinus',
+    height: 'MB fold above the canine apex, at the canine fossa', angle: '~10° toward the canine apex, bevel toward bone',
+    depth: '5–10 mm: tip at or just above the canine apex', aspirate: 'Once; if negative, deposit ~0.9 mL slowly',
+    pulp: 'Central incisor, lateral incisor and canine', soft: 'Labial gingiva and mucosa of the anterior teeth',
+    landmark: 'Canine eminence and canine fossa',
+    pearl: 'ASA fibres cross the midline, so a central incisor may also need a contralateral labial infiltration.' },
+  { id: 'io', name: 'Infraorbital block', full: 'Infraorbital (ASA) block', arch: 'max',
+    nerve: 'ASA, MSA if present, and the infraorbital terminal branches',
+    height: 'MB fold over PM1, parallel to its long axis; finger on the infraorbital foramen', angle: 'Parallel to the long axis of PM1',
+    depth: '~16 mm', aspirate: null,
+    pulp: 'Incisors and canine (± premolars and the MB root of M1)', soft: 'Labial gingiva; lower eyelid, side of the nose and upper lip',
+    landmark: 'Infraorbital foramen (palpated through the skin)',
+    pearl: 'Numbness of the lower eyelid, side of the nose and upper lip comes from the infraorbital terminal branches: inferior palpebral, lateral nasal and superior labial.' },
+  { id: 'supra', name: 'Supraperiosteal', full: 'Supraperiosteal injection (local infiltration)', arch: 'both',
+    nerve: 'Terminal branches at the apex of the tooth',
+    height: 'MB fold, over the apex of the target tooth', angle: 'Parallel to the tooth’s long axis, bevel toward bone',
+    depth: 'A few mm (3–5): tip at or just above the apex', aspirate: 'Once; if negative, deposit ~0.6 mL slowly',
+    pulp: 'The target tooth', soft: 'Buccal periosteum and mucosa of the area',
+    pearl: 'Works in the maxilla because the buccal plate is thin and porous. In the adult posterior mandible the thick cortex and external oblique ridge make it unreliable.' },
+  { id: 'np', name: 'Nasopalatine block', full: 'Nasopalatine block', arch: 'max',
+    nerve: 'Nasopalatine n. (V2), down the septum and through the incisive canal',
+    height: 'Palatal mucosa just lateral to the incisive papilla', angle: null,
+    depth: 'Shallow, to gentle bone contact', aspirate: null,
+    pulp: 'None', soft: 'Anterior palate, canine to canine', landmark: 'Incisive papilla',
+    pearl: 'Palatal mucoperiosteum is dense and bound down: pressure anesthesia with a cotton swab first, small volumes, slow injection. Blanching is expected.' },
+  { id: 'gp', name: 'Greater palatine block', full: 'Greater palatine block', arch: 'max',
+    nerve: 'Greater palatine n. (V2), exiting the greater palatine foramen',
+    height: '~1 cm palatal to the M2–M3 margin, just anterior to the foramen', angle: 'Approach from the opposite side of the mouth',
+    depth: null, aspirate: null,
+    pulp: 'None', soft: 'Posterior palate forward to PM1, to the midline', landmark: 'Greater palatine foramen: a depression felt with a cotton swab',
+    pearl: 'The foramen is usually opposite M3, sometimes M2–M3 or further back. Find it by palpation, not by counting teeth. GP and NP overlap at the canine.' },
+  { id: 'v2', name: 'V2 block', full: 'Maxillary (V2) nerve block', arch: 'max',
+    nerve: 'The whole maxillary nerve in the pterygopalatine fossa',
+    height: 'Via the greater palatine canal, or a high tuberosity approach', angle: null, depth: null, aspirate: null,
+    pulp: 'All maxillary teeth on that side', soft: 'Buccal and palatal tissues on that side; lower eyelid, side of the nose, upper lip',
+    pearl: 'Acts on V2 in the pterygopalatine fossa, upstream of the PSA, greater palatine and nasopalatine branches.' },
+  { id: 'ianb', name: 'IANB', full: 'Inferior alveolar nerve block', arch: 'mand',
+    nerve: 'Inferior alveolar n. in the pterygomandibular space (lingual n. usually blocked too)',
+    height: 'Sulcus just above the lingula, 6–10 mm above the occlusal plane', angle: null,
+    depth: 'Bone at ~20–25 mm; withdraw 1 mm', aspirate: 'Aspirate before depositing: highest positive-aspiration rate of the dental blocks (~10–15%)',
+    pulp: 'All mandibular teeth on that side, to the midline', soft: 'Lower lip and chin; buccal gingiva anterior to the mental foramen; with the lingual n.: anterior ⅔ tongue, floor of mouth, lingual gingiva',
+    landmark: 'Coronoid notch (height) and pterygomandibular raphe (medial limit of entry)',
+    pearl: 'The most used and most often failed dental block. It does not numb the buccal gingiva of the molars: add a long buccal block for extractions, clamps and scaling there.' },
+  { id: 'lb', name: 'Long buccal block', full: 'Long buccal nerve block', arch: 'mand',
+    nerve: 'Buccal (long buccal) n., the only sensory branch of the anterior division of V3',
+    height: 'Mucosa just distal and buccal to the last molar', angle: null,
+    depth: '1–4 mm to gentle bone contact; ~0.3 mL', aspirate: null,
+    pulp: 'None', soft: 'Buccal soft tissue and periosteum of the molars',
+    pearl: 'The buccal nerve crosses the anterior border of the ramus at about the occlusal level, between the heads of lateral pterygoid, so the IANB misses it.' },
+  { id: 'mental', name: 'Mental block', full: 'Mental nerve block', arch: 'mand', ext: true,
+    nerve: 'Mental n., emerging from the mental foramen',
+    height: 'Mucobuccal fold at the mental foramen, below the premolar apices', angle: null, depth: null, aspirate: null,
+    pulp: 'None', soft: 'Lower lip, chin and buccal gingiva anterior to the mental foramen', landmark: 'Mental foramen region, below the premolar apices',
+    pearl: 'An accessory mental foramen (~6–10%) or a long anterior loop (~40%) changes where the fibres are.' },
+  { id: 'incisive', name: 'Incisive block', full: 'Incisive nerve block', arch: 'mand', ext: true,
+    nerve: 'Incisive n. (and the mental n.) at the mental foramen',
+    height: 'At the mental foramen, below the premolar apices, with pressure to drive solution into the foramen', angle: null, depth: null, aspirate: null,
+    pulp: 'Premolars, canine and incisors to the midline', soft: 'Lower lip, chin and buccal gingiva anterior to the mental foramen',
+    pearl: 'Useful when molars are not involved. Incisive fibres may cross the midline.' }
+];
+const B = Object.fromEntries(BLOCKS.map(b => [b.id, b]));
+const NEVER_TOGETHER = [['asa', 'io'], ['mental', 'incisive']];
+function compatible(a, b) { return !NEVER_TOGETHER.some(p => p.includes(a) && p.includes(b)); }
+
+/* ------------------------------------------------------------------ data: numb map */
+const TYPES = ['CI', 'LI', 'C', 'PM1', 'PM2', 'M1', 'M2', 'M3'];
+const TNAME = { CI: 'central incisor', LI: 'lateral incisor', C: 'canine', PM1: 'first premolar', PM2: 'second premolar', M1: 'first molar', M2: 'second molar', M3: 'third molar' };
+const QN = { UR: 'upper right', UL: 'upper left', LL: 'lower left', LR: 'lower right' };
+function num(q, i) { return q === 'UR' ? 8 - i : q === 'UL' ? 9 + i : q === 'LL' ? 24 - i : 25 + i; }
+const T = (q, ...types) => types.map(t => num(q, TYPES.indexOf(t)));
+const ALL = TYPES;
+const EXTRAS = [
+  { id: 'lipU', label: 'Upper lip' }, { id: 'eyelid', label: 'Lower eyelid' }, { id: 'nose', label: 'Side of nose' },
+  { id: 'lipL', label: 'Lower lip' }, { id: 'chin', label: 'Chin' }, { id: 'tongue', label: 'Anterior ⅔ tongue' }, { id: 'floor', label: 'Floor of mouth' }
+];
+function mkKey(spec) {
+  const m = {};
+  for (const lvl of ['req', 'opt']) {
+    const g = spec[lvl] || {};
+    for (const k of ['p', 'b', 'l']) (g[k] || []).forEach(n => { m[k + n] = lvl; });
+    (g.x || []).forEach(id => { m['x_' + id] = lvl; });
+  }
+  return m;
+}
+const ZONES = [
+  { block: 'psa', side: 'on the patient’s right',
+    key: mkKey({ req: { p: T('UR', 'M1', 'M2', 'M3'), b: T('UR', 'M1', 'M2', 'M3') } }),
+    why: 'PSA: pulps of M3, M2 and M1 plus the buccal periodontium and bone over them. The MB root of M1 is frequently outside PSA territory (MSA), so a supplemental injection over M1 may be needed. No palatal tissue.' },
+  { block: 'msa', side: 'on the patient’s right',
+    key: mkKey({ req: { p: T('UR', 'PM1', 'PM2'), b: T('UR', 'PM1', 'PM2') }, opt: { p: T('UR', 'M1'), b: T('UR', 'M1') } }),
+    why: 'MSA: PM1, PM2 and the MB root of M1 (shown as variable), with the buccal periodontium of the premolars. Only works if the MSA nerve is present (~28–72%).' },
+  { block: 'io', side: 'on the patient’s right',
+    key: mkKey({ req: { p: T('UR', 'CI', 'LI', 'C'), b: T('UR', 'CI', 'LI', 'C'), x: ['lipU', 'eyelid', 'nose'] },
+                 opt: { p: [...T('UR', 'PM1', 'PM2', 'M1'), ...T('UL', 'CI')], b: T('UR', 'PM1', 'PM2') } }),
+    why: 'Infraorbital (ASA) block: incisors and canine to the midline, ± premolars and the MB root of M1 if an MSA is present. Labial gingiva, plus the lower eyelid, side of the nose and upper lip. The opposite central incisor is variable (midline crossover).' },
+  { block: 'supra', side: 'over the upper right lateral incisor (#7)',
+    key: mkKey({ req: { p: T('UR', 'LI'), b: T('UR', 'LI') }, opt: { b: T('UR', 'CI', 'C') } }),
+    why: 'A supraperiosteal injection numbs the target tooth and the buccal periosteum and mucosa of the area, and nothing on the palate.' },
+  { block: 'np', side: '',
+    key: mkKey({ req: { l: [...T('UR', 'CI', 'LI', 'C'), ...T('UL', 'CI', 'LI', 'C')] }, opt: { l: [...T('UR', 'PM1'), ...T('UL', 'PM1')] } }),
+    why: 'Nasopalatine: palatal mucosa and gingiva from canine to canine, both sides, and no pulps. The canine palatal tissue is also reached by the greater palatine, so the edge is variable.' },
+  { block: 'gp', side: 'on the patient’s right',
+    key: mkKey({ req: { l: T('UR', 'PM1', 'PM2', 'M1', 'M2', 'M3') }, opt: { l: T('UR', 'C') } }),
+    why: 'Greater palatine: posterior palate from the molars forward to PM1, to the midline, and no pulps. The canine region overlaps with the nasopalatine.' },
+  { block: 'v2', side: 'on the patient’s right',
+    key: mkKey({ req: { p: T('UR', ...ALL), b: T('UR', ...ALL), l: T('UR', ...ALL), x: ['lipU', 'eyelid', 'nose'] }, opt: { p: T('UL', 'CI'), b: T('UL', 'CI'), l: T('UL', 'CI') } }),
+    why: 'A V2 block catches the nerve in the pterygopalatine fossa: every maxillary pulp on that side, buccal and palatal tissue, plus the infraorbital skin territory.' },
+  { block: 'ianb', side: 'on the patient’s right (lingual nerve blocked too)',
+    key: mkKey({ req: { p: T('LR', ...ALL), b: T('LR', 'CI', 'LI', 'C', 'PM1'), l: T('LR', ...ALL), x: ['lipL', 'chin', 'tongue', 'floor'] },
+                 opt: { p: T('LL', 'CI'), b: T('LR', 'PM2') } }),
+    why: 'IANB (+ lingual): every mandibular pulp on that side to the midline, lingual gingiva, tongue and floor of mouth, lower lip and chin, and buccal gingiva anterior to the mental foramen. The buccal gingiva of the molars belongs to the long buccal nerve, which the IANB misses.' },
+  { block: 'lb', side: 'on the patient’s right',
+    key: mkKey({ req: { b: T('LR', 'M1', 'M2', 'M3') }, opt: { b: T('LR', 'PM2') } }),
+    why: 'Long buccal: buccal soft tissue and periosteum of the molars only. No pulps.' },
+  { block: 'mental', side: 'on the patient’s right',
+    key: mkKey({ req: { b: T('LR', 'CI', 'LI', 'C', 'PM1'), x: ['lipL', 'chin'] }, opt: { b: T('LR', 'PM2') } }),
+    why: 'Mental: lower lip, chin and buccal gingiva anterior to the mental foramen. No pulps.' },
+  { block: 'incisive', side: 'on the patient’s right',
+    key: mkKey({ req: { p: T('LR', 'CI', 'LI', 'C', 'PM1'), b: T('LR', 'CI', 'LI', 'C', 'PM1'), x: ['lipL', 'chin'] }, opt: { p: [...T('LR', 'PM2'), ...T('LL', 'CI')], b: T('LR', 'PM2') } }),
+    why: 'Incisive: pulps of the premolars, canine and incisors (the mental nerve goes too, so lip, chin and anterior buccal gingiva). Molars are not covered.' },
+  { block: 'supra', side: 'over the lower right central incisor (#25)', variant: 'mand',
+    key: mkKey({ req: { p: T('LR', 'CI'), b: T('LR', 'CI') }, opt: { p: T('LL', 'CI', 'LR', 'LI'), b: [...T('LR', 'LI'), ...T('LL', 'CI')] } }),
+    why: 'Anterior mandibular infiltration works because the bone over the incisors is thin. It numbs the target tooth and the labial tissue around it.' }
+];
+function zoneTitle(z) { return `${B[z.block].full}${z.side ? ' ' + z.side : ''}`; }
+
+/* ------------------------------------------------------------------ data: plates */
+const PLATES = [
+  { id: 'maxn', img: 'plate_maxillary_nerve', title: 'Maxillary nerve, inferolateral view', src: 'Slide 11', ar: 1060 / 1500,
+    pins: [
+      { l: 'Posterior superior alveolar branches', x: .2057, y: .272, i: 'Leave V2 in the pterygopalatine fossa and run down the tuberosity. PSA block target.' },
+      { l: 'Infraorbital nerve', x: .3075, y: .272, i: 'V2 continues through the infraorbital groove and canal, emerging at the infraorbital foramen.' },
+      { l: 'Maxillary nerve (V2)', x: .2057, y: .3367, i: 'Sensory only. Crosses the pterygopalatine fossa after leaving the skull.' },
+      { l: 'Foramen rotundum', x: .2057, y: .4013, i: 'V2 leaves the middle cranial fossa here.' },
+      { l: 'Greater palatine nerve', x: .5538, y: .6353, i: 'Exits the greater palatine foramen; palatal mucosa from the molars forward. GP block.' },
+      { l: 'Nasopalatine nerve', x: .8717, y: .6167, i: 'Emerges through the incisive canal; anterior palate canine to canine. NP block.' }
+    ], big: true },
+  { id: 'lat', img: 'plate_nerve_lateral', title: 'Alveolar nerves, lateral view', src: 'Slide 15', ar: 1117 / 1500,
+    pins: [
+      { l: 'Posterior superior alveolar nerve', x: .376, y: .2433, i: 'Enters the posterior maxilla at the tuberosity to reach the molars.' },
+      { l: 'Infraorbital nerve', x: .4906, y: .162, i: 'Terminal V2 in the floor of the orbit.' },
+      { l: 'Anterior & middle superior alveolar nerves', x: .6312, y: .2567, i: 'Leave the infraorbital canal and run in the anterior sinus wall to the premolars and anterior teeth.' },
+      { l: 'Long buccal nerve', x: .3357, y: .4233, i: 'Crosses the anterior ramus at about the occlusal level; buccal gingiva of the molars.' },
+      { l: 'Inferior alveolar nerve (in canal)', x: .349, y: .4867, i: 'Runs in the mandibular canal to the mental foramen.' },
+      { l: 'Mental nerve', x: .6446, y: .4833, i: 'Exits the mental foramen below the premolar apices; lip and chin.' },
+      { l: 'Incisive nerve', x: .6446, y: .5413, i: 'Continues forward in bone to the canine and incisors.' },
+      { l: 'Mandibular division (V3)', x: .716, y: .6453, i: 'Leaves the skull through foramen ovale.' },
+      { l: 'Inferior alveolar nerve (at the mandibular foramen)', x: .658, y: .8, i: 'IANB deposits solution in the pterygomandibular space just above the lingula, before the nerve enters the foramen.' },
+      { l: 'Lingual nerve', x: .573, y: .83, i: 'Anterior to the IAN; joined by the chorda tympani. Anterior ⅔ tongue, floor of mouth, lingual gingiva.' }
+    ] },
+  { id: 'v3', img: 'plate_v3_fossa', title: 'V3 in the infratemporal fossa', src: 'Slide 14', ar: 2197 / 1316,
+    pins: [
+      { l: 'Temporalis muscle', x: .4475, y: .1795, i: 'Supplied by the deep temporal nerves (anterior division).' },
+      { l: 'Deep temporal nerves', x: .5425, y: .2087, i: 'Anterior division, motor to temporalis.' },
+      { l: 'Location of the trigeminal ganglion', x: .65, y: .167, i: 'Meckel’s cave on the apex of the petrous temporal bone.' },
+      { l: 'Mandibular nerve (V3)', x: .5975, y: .2938, i: 'Exits foramen ovale; the only division with a motor root.' },
+      { l: 'Nerve to lateral pterygoid', x: .545, y: .3155, i: 'Anterior division, motor.' },
+      { l: 'Lateral pterygoid muscle', x: .51, y: .399, i: 'The buccal nerve passes between its two heads.' },
+      { l: 'Buccal nerve', x: .51, y: .5075, i: 'The only sensory branch of the anterior division. The IANB misses it.' },
+      { l: 'Masseteric nerve', x: .62, y: .5634, i: 'Anterior division; masseter and TMJ.' }
+    ] },
+  { id: 'palate', img: 'plate_hard_palate', title: 'Hard palate, inferior view', src: 'Slide 19', ar: 1539 / 918,
+    pins: [
+      { l: 'Incisive fossa', x: .497, y: .234, i: 'Incisive foramen: nasopalatine nerve and vessels. Covered by the incisive papilla.' },
+      { l: 'Palatine process of maxilla', x: .4256, y: .3867, i: 'Anterior ~¾ of the hard palate.' },
+      { l: 'Horizontal plate of palatine bone', x: .4159, y: .684, i: 'Posterior ~¼ of the hard palate.' },
+      { l: 'Greater palatine foramen', x: .6595, y: .708, i: 'Posterolateral corner, usually opposite M3 (or M2–M3).' },
+      { l: 'Lesser palatine foramina', x: .6595, y: .768, i: 'Just behind the greater palatine foramen; supply the soft palate.' },
+      { l: 'Canine', x: .64, y: .1416, i: 'GP and NP both reach the canine palatal tissue.' },
+      { l: 'Second premolar', x: .7147, y: .3083, i: 'MSA injection site is the MB fold above its apex.' },
+      { l: 'First molar', x: .7375, y: .39, i: 'Zygomatic buttress lies over M1.' },
+      { l: 'Second molar', x: .7342, y: .5392, i: 'PSA injection site is the MB fold above M2.' },
+      { l: 'Third molar', x: .7635, y: .648, i: 'The greater palatine foramen usually sits opposite this tooth.' }
+    ] },
+  { id: 'mand', img: 'plate_mandible', title: 'Mandible, lateral and medial surfaces', src: 'Slide 34', ar: 1156 / 860,
+    pins: [
+      { l: 'Coronoid process', x: .479, y: .147, i: 'Its anterior border leads down to the coronoid notch, which sets IANB height.' },
+      { l: 'Condylar process', x: .682, y: .159, i: 'Articulates at the TMJ. Gow-Gates targets the neck of the condyle.' },
+      { l: 'Mandibular foramen', x: .552, y: .383, i: 'Where the IAN enters the canal, guarded by the lingula. IANB target is the sulcus just above the lingula.' },
+      { l: 'Submandibular fossa', x: .5, y: .501, i: 'Below the mylohyoid line, holding the submandibular gland.' },
+      { l: 'Sublingual fossa', x: .332, y: .532, i: 'Above the mylohyoid line anteriorly, holding the sublingual gland.' },
+      { l: 'Alveolar process', x: .238, y: .617, i: 'Tooth-bearing bone. Thick buccal cortex posteriorly in adults.' },
+      { l: 'Mental foramen', x: .332, y: .792, i: 'Below the premolar apices. Mental and incisive blocks.' },
+      { l: 'Ramus', x: .868, y: .709, i: 'Ramus blocks: IANB, Gow-Gates, Vazirani-Akinosi.' },
+      { l: 'Body', x: .464, y: .947, i: 'Body blocks: mental/incisive and long buccal.' }
+    ] },
+  { id: 'vest', img: 'photo_vestibule', title: 'Maxillary vestibule, clinical photo', src: 'Slide 24', ar: 1214 / 775,
+    pins: [
+      { l: 'Mucogingival junction', x: .1829, y: .2452, i: 'Boundary between attached gingiva and loose alveolar mucosa.' },
+      { l: 'Alveolar mucosa', x: .3369, y: .0774, i: 'Loose, movable mucosa that takes solution comfortably.' },
+      { l: 'Maxillary labial frenum', x: .4769, y: .1097, i: 'Midline fold; avoid injecting into it.' },
+      { l: 'Marginal gingiva', x: .5634, y: .3161, i: 'Free gingival margin around the tooth.' },
+      { l: 'Maxillary vestibule (mucobuccal fold)', x: .9382, y: .2387, i: 'Enter at the depth of the vestibule for every buccal injection.' },
+      { l: 'Attached gingiva', x: .2834, y: .3316, i: 'Bound down to bone; does not accept solution comfortably.' },
+      { l: 'Interdental gingiva', x: .2422, y: .4155, i: 'Gingival papilla between adjacent teeth.' },
+      { l: 'Mandibular buccal frenum', x: .1351, y: .9097, i: 'Fold of mucosa in the mandibular vestibule near the premolars.' },
+      { l: 'Mandibular vestibule', x: .8682, y: .8323, i: 'Depth of the lower vestibule.' }
+    ] }
+];
+const TAPS = [
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'Nasopalatine block: tap where the needle goes in.', shapes: [{ x: .4418, y: .1685, r: .08 }],
+    why: 'Palatal mucosa just lateral to the incisive papilla, shallow, to gentle bone contact. Pressure anesthesia with a swab first.' },
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'Tap the palatine rugae.', shapes: [{ x0: .277, y0: .2, x1: .64, y1: .39 }],
+    why: 'The transverse ridges behind the incisive papilla on the anterior palate.' },
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'Tap the median palatine raphe.', shapes: [{ x0: .395, y0: .4, x1: .53, y1: .99 }],
+    why: 'The midline ridge over the median palatine suture, running back from the papilla.' },
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'The MSA block is given in the MB fold above the apex of this tooth. Tap it (either side).', shapes: [{ x: .0786, y: .512, r: .07 }, { x: .8226, y: .512, r: .07 }],
+    why: 'Second premolar. Height: MB fold above the maxillary PM2 apex.' },
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'The PSA block is given in the MB fold above this tooth. Tap it (either side).', shapes: [{ x: .0462, y: .899, r: .07 }, { x: .9011, y: .899, r: .07 }],
+    why: 'Second molar. Needle 45° up, in and back, ~16 mm.' },
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'A low, thick zygomatic buttress over this tooth can block infiltration. Tap it (either side).', shapes: [{ x: .0693, y: .7116, r: .07 }, { x: .8549, y: .7116, r: .07 }],
+    why: 'First molar. If the buttress blocks infiltration (children, some adults), use a PSA block.' },
+  { img: 'photo_palate', ar: 1082 / 801, title: 'Palate, intraoral photo', src: 'Slide 23',
+    q: 'The ASA block aims at the apex of this tooth, in the canine fossa. Tap it (either side).', shapes: [{ x: .1525, y: .2, r: .07 }, { x: .7116, y: .2, r: .07 }],
+    why: 'Canine. Needle ~10° toward the canine apex, 5–10 mm.' },
+  { img: 'photo_ianb_site', ar: 805 / 1256, title: 'Open mouth, right side', src: 'Slide 37', reveal: 'photo_ianb_technique',
+    q: 'Inferior alveolar nerve block: tap your needle insertion point.', shapes: [{ x: .569, y: .387, r: .085 }],
+    why: 'Sulcus just above the lingula, 6–10 mm above the occlusal plane, lateral to the pterygomandibular raphe. Bone at ~20–25 mm; withdraw 1 mm; aspirate.' }
+];
+
+/* ------------------------------------------------------------------ data: photo ID */
+const PHOTO_ID = [
+  { img: 'tech_psa_model', a: 'psa', why: 'Needle at the MB fold above M2, travelling 2–2.5 cm up, in and back to the PSA nerve. M1–M3 highlighted.' },
+  { img: 'tech_psa_clinical', a: 'psa', why: 'Cheek retracted; needle enters high in the MB fold at the upper second molar.' },
+  { img: 'tech_msa_model', a: 'msa', why: 'MSA branch highlighted; PM1, PM2 and the MB root of M1 shown in red.' },
+  { img: 'tech_msa_clinical', a: 'msa', why: 'Needle entry between the first molar and second premolar, above the PM2 apex.' },
+  { img: 'tech_asa_model', a: 'asa', why: 'ASA branch highlighted; central, lateral and canine in red; needle at the canine apex.' },
+  { img: 'tech_asa_clinical', a: 'asa', why: 'Needle entry at the apex of the canine, in the canine fossa.' },
+  { img: 'tech_supraperiosteal_model', a: 'supra', why: 'One tooth highlighted and the needle aimed at its individual dental nerve: a supraperiosteal injection.' },
+  { img: 'tech_supraperiosteal_clinical', a: 'supra', why: 'Needle parallel to the long axis of one incisor, bevel facing the tooth.' },
+  { img: 'tech_long_buccal_skull', a: 'lb', why: 'Needle distal and buccal to the last molar at the anterior border of the ramus.' },
+  { img: 'tech_long_buccal_clinical', a: 'lb', why: 'Entry in the mucosa just distal and buccal to the last molar; 1–4 mm; ~0.3 mL.' },
+  { img: 'tech_mand_infiltration_skull', a: 'supra', why: 'Needle alongside a single mandibular anterior tooth: supraperiosteal infiltration where the bone is thin.' },
+  { img: 'tech_mand_infiltration_clinical', a: 'supra', why: 'Labial vestibule of the lower anterior teeth: supraperiosteal infiltration.' },
+  { img: 'photo_ianb_technique', a: 'ianb', why: 'Needle 6–10 mm above the occlusal plane, into the sulcus above the lingula from the opposite premolars.' }
+];
+const CONCEPTS = [
+  { img: 'concept_infiltration', a: 'Local infiltration', why: 'Solution deposited at the small terminal nerve endings in the area of treatment.' },
+  { img: 'concept_field', a: 'Field block', why: 'Solution deposited near the larger terminal branches, so the area distal to the injection is numb.' },
+  { img: 'concept_nerveblock', a: 'Nerve block', why: 'Solution deposited close to the main nerve trunk, usually some distance from the treatment site.' }
+];
+
+/* ------------------------------------------------------------------ data: facts */
+const FACTS = [
+  ['Where does the trigeminal ganglion lie?', 'Meckel’s cave, on the apex of the petrous temporal bone', ['The pterygopalatine fossa', 'The cavernous sinus', 'The infratemporal fossa'], 'The semilunar ganglion holds the sensory cell bodies for all three divisions.'],
+  ['Which division does the trigeminal motor root join?', 'V3 only', ['V1 and V3', 'V2 only', 'All three divisions'], 'The small motor root runs under the ganglion and joins V3, making it the only mixed division.'],
+  ['V1 leaves the skull through the…', 'Superior orbital fissure', ['Foramen rotundum', 'Foramen ovale', 'Inferior orbital fissure'], 'V1: superior orbital fissure. V2: foramen rotundum. V3: foramen ovale.'],
+  ['V2 leaves the skull through the…', 'Foramen rotundum', ['Foramen ovale', 'Superior orbital fissure', 'Foramen spinosum'], 'V2 exits foramen rotundum into the pterygopalatine fossa.'],
+  ['V3 leaves the skull through the…', 'Foramen ovale', ['Foramen rotundum', 'Foramen spinosum', 'Stylomastoid foramen'], 'V3 exits foramen ovale into the infratemporal fossa.'],
+  ['Skin over the angle of the mandible is supplied by…', 'The great auricular n. (C2–C3)', ['The auriculotemporal n.', 'The buccal n.', 'The mental n.'], 'It is not trigeminal. Cervical fibres can also reach anterior mandibular tissues.'],
+  ['Transient diplopia after a maxillary injection is explained by solution reaching…', 'The orbit (V1 territory and orbital contents)', ['The pterygoid venous plexus', 'The parotid gland', 'The facial nerve'], 'V1 is not blocked in dentistry, but its territory explains rare ocular effects (diplopia, transient amaurosis).'],
+  ['Which V2 branches arise in the pterygopalatine fossa?', 'PSA, greater & lesser palatine, nasopalatine, zygomatic', ['MSA and ASA', 'Inferior palpebral, lateral nasal, superior labial', 'Meningeal branch only'], 'MSA and ASA leave in the infraorbital groove and canal; the facial branches leave at the infraorbital foramen.'],
+  ['Where do the MSA and ASA branch from V2?', 'In the infraorbital groove and canal', ['In the pterygopalatine fossa', 'At the infraorbital foramen', 'In the middle cranial fossa'], 'The ASA runs in the anterior wall of the maxillary sinus. The MSA is inconsistent.'],
+  ['Which nerves emerge at the infraorbital foramen?', 'Inferior palpebral, lateral nasal, superior labial', ['PSA, MSA, ASA', 'Greater and lesser palatine', 'Zygomaticotemporal and zygomaticofacial'], 'These give the lower eyelid, side of nose and upper lip numbness after an infraorbital block.'],
+  ['The meningeal branch of V3 (nervus spinosus) re-enters the skull through…', 'Foramen spinosum', ['Foramen ovale', 'Foramen lacerum', 'Foramen rotundum'], 'It comes off the short main trunk.'],
+  ['The nerve to medial pterygoid also supplies…', 'Tensor tympani and tensor veli palatini', ['Masseter and temporalis', 'Mylohyoid and anterior digastric', 'Buccinator'], 'It arises from the main trunk of V3.'],
+  ['The only sensory branch of the anterior division of V3 is the…', 'Buccal (long buccal) n.', ['Lingual n.', 'Auriculotemporal n.', 'Masseteric n.'], 'It supplies buccal mucosa and molar buccal gingiva.'],
+  ['The auriculotemporal nerve encircles which vessel?', 'Middle meningeal artery', ['Inferior alveolar artery', 'Superficial temporal vein', 'Maxillary artery, third part'], 'It supplies the TMJ, temple, and carries parotid secretomotor fibres.'],
+  ['The lingual nerve is joined by…', 'The chorda tympani (CN VII)', ['The nerve to mylohyoid', 'The glossopharyngeal n.', 'The buccal n.'], 'Anterior ⅔ tongue, floor of mouth, lingual gingiva.'],
+  ['The nerve to mylohyoid branches from the IAN…', 'Just before the mandibular foramen', ['After the mental foramen', 'In the pterygopalatine fossa', 'From the lingual nerve'], 'The IAN then continues in the canal and ends as the mental and incisive nerves.'],
+  ['Why does the IANB miss the buccal nerve?', 'It crosses the anterior ramus between the heads of lateral pterygoid, away from the IANB site', ['It runs inside the mandibular canal', 'It is a motor nerve', 'It is supplied by C2–C3'], 'Add a long buccal block for the buccal gingiva of the molars.'],
+  ['Branches of the maxillary artery’s third (pterygopalatine) part include…', 'PSA, infraorbital, greater palatine, sphenopalatine', ['Inferior alveolar, middle meningeal', 'Masseteric, deep temporal, buccal', 'Facial, lingual'], 'Part 1 (mandibular): IA, middle meningeal. Part 2 (pterygoid): muscular, buccal.'],
+  ['Over-insertion during a PSA block risks…', 'A rapidly expanding haematoma from the pterygoid venous plexus', ['Facial nerve paralysis', 'Trismus from medial pterygoid injury only', 'Lingual nerve paraesthesia'], 'The plexus surrounds lateral pterygoid, posterior–superior–medial to the tuberosity, and connects to the cavernous sinus.'],
+  ['Which dental block has the highest positive-aspiration rate?', 'IANB (~10–15%)', ['PSA (~3%)', 'Nasopalatine', 'Supraperiosteal'], 'The IA artery and vein run with the IAN in the pterygomandibular space.'],
+  ['The pterygoid venous plexus connects to the…', 'Cavernous sinus', ['Sigmoid sinus', 'External jugular vein only', 'Superior sagittal sinus'], 'That connection is why infection or haematoma here matters.'],
+  ['The palatine process of the maxilla forms what fraction of the hard palate?', 'Anterior ~¾', ['Anterior ~½', 'Posterior ~¼', 'All of it'], 'The horizontal plate of the palatine bone forms the posterior ~¼.'],
+  ['The greater palatine foramen is usually opposite…', 'M3 (sometimes M2–M3)', ['PM2', 'M1', 'The canine'], 'Find it by palpation (a depression with a cotton swab), not by counting teeth.'],
+  ['The lesser palatine foramina supply the…', 'Soft palate', ['Anterior palate', 'Maxillary sinus', 'Upper lip'], 'They sit just behind the greater palatine foramen.'],
+  ['What passes through the incisive foramen?', 'Nasopalatine nerve and vessels', ['Greater palatine nerve', 'ASA nerve', 'Sphenopalatine artery only'], 'The GP artery anastomoses with the NP artery in the incisive canal.'],
+  ['Why does infiltration work well in the maxilla?', 'Thin, porous buccal plate lets solution reach the apical nerves', ['The nerves run superficially in the mucosa', 'Maxillary teeth have no apical foramen', 'The maxilla is D1 bone'], 'Infiltrate the maxilla; block the adult posterior mandible.'],
+  ['Why is infiltration unreliable over the adult mandibular molars?', 'Thick dense cortex and the external oblique ridge', ['The IAN runs lingual to the teeth', 'The mucosa is bound down', 'There is no periosteum'], 'Block the IAN. Buccal articaine infiltration is a supplement, not a substitute.'],
+  ['In children, mandibular infiltration…', 'Works better, because the mandible is thinner and more porous', ['Never works', 'Needs twice the volume', 'Is contraindicated'], 'Bone density rises with age.'],
+  ['Palatal injections: which is expected?', 'Blanching of the tissue', ['Resistance-free flow', 'Large volumes (1.8 mL)', 'Positive aspiration'], 'Dense, bound mucoperiosteum: small volumes, slow injection, pressure anesthesia first.'],
+  ['Where should buccal injections enter?', 'The mucobuccal fold (loose alveolar mucosa)', ['Attached gingiva', 'Marginal gingiva', 'Interdental papilla'], 'Loose alveolar mucosa takes solution comfortably; attached gingiva and palatal mucosa do not.'],
+  ['A PSA needle hits bone early. What does that mean?', 'The needle is angled too far toward the midline', ['The needle is too shallow', 'You are in the pterygoid plexus', 'Normal: always seek bone for PSA'], 'No resistance is expected during a PSA.'],
+  ['After a PSA, the upper first molar still hurts. Most likely cause and fix?', 'MB root supplied by the MSA: add supraperiosteal over M1 or an MSA/infraorbital block', ['Pterygoid plexus: re-inject deeper', 'Lingual nerve: add a GP block', 'Long buccal: add a buccal block'], 'The MB root of M1 is frequently outside PSA territory.'],
+  ['An infraorbital block numbs the right central incisor only partially. Why?', 'ASA fibres cross the midline: add a contralateral labial infiltration', ['The GP nerve supplies it', 'The PSA supplies it', 'Needle too deep'], 'Midline crossover of ASA fibres.'],
+  ['Infiltration over the upper M1 fails in a child. Likely reason?', 'A low, thick zygomatic buttress: use a PSA block', ['The MSA is absent', 'The palatal root is supplied by the NP', 'Children need articaine'], 'The buttress lies over M1 in children and some adults.'],
+  ['After NP and GP blocks, which area may still need both?', 'Canine palatal tissue', ['Molar palatal tissue', 'Incisive papilla', 'Soft palate'], 'GP and NP both reach the canine region.'],
+  ['“The lip is numb but the molar isn’t.” Which finding explains this best?', 'An extra canal or foramen (retromolar foramen, bifid canal) carrying fibres the IANB misses', ['The buccal nerve', 'Needle hit the lingula', 'Too much vasoconstrictor'], 'Each extra canal or foramen can carry fibres the IANB does not reach.'],
+  ['Retromolar foramen prevalence (approx.)?', '~24%', ['~6–10%', '~38%', '~72%'], 'Bifid canal ~38%, accessory mental foramen ~6–10%, anterior loop ~40%.'],
+  ['Bifid mandibular canal prevalence (approx.)?', '~38%', ['~24%', '~6–10%', '~2%'], 'From a CBCT systematic review cited in the lecture.'],
+  ['Accessory mental foramen prevalence (approx.)?', '~6–10%', ['~24%', '~38%', '~40%'], 'From dry-mandible studies and meta-analysis.'],
+  ['Anterior loop of the mental nerve prevalence (approx.)?', '~40%', ['~6–10%', '~24%', '~72%'], 'Relevant to implants and incisive/mental blocks near the foramen.'],
+  ['MSA nerve presence ranges from ~28% (textbook) to…', '~72% (Loetscher & Walton dissection)', ['~40%', '~100%', '~10%'], 'Premolars may be supplied by the MSA, ASA or PSA.'],
+  ['Which palpable landmark sets IANB height?', 'Coronoid notch', ['External oblique ridge', 'Mylohyoid ridge', 'Mental foramen'], 'Target: 6–10 mm above the occlusal plane.'],
+  ['Which landmark marks the medial limit of IANB needle entry?', 'Pterygomandibular raphe', ['Retromolar pad', 'Coronoid notch', 'External oblique ridge'], 'Stay lateral to the raphe.'],
+  ['The mylohyoid ridge is palpated for…', 'Lingual infiltration sites', ['IANB height', 'PSA depth', 'Mental block'], 'Mandibular palpation checklist.'],
+  ['The external oblique ridge tells you…', 'The buccal cortex is thick here', ['Where the lingula is', 'Where to give a PSA', 'Where the mental foramen is'], 'Why buccal infiltration over adult molars is unreliable.'],
+  ['The ramus hosts which blocks?', 'IANB, Gow-Gates, Vazirani-Akinosi', ['Mental, incisive, long buccal', 'PSA, MSA, ASA', 'NP, GP'], 'Think in two regions: ramus and body (mental/incisive, buccal).'],
+  ['Three anatomical questions behind every injection: where is the nerve, what lies between needle and nerve, and…', 'What else lives there (vessels, glands, muscles, nerves)?', ['How long does the anesthetic last?', 'Which needle gauge?', 'What is the patient’s weight?'], 'The third question is the basis of every complication.'],
+  ['The greater palatine nerve supplies palatal mucosa and gingiva from…', 'The molars forward to the canine region', ['Canine to canine', 'The soft palate only', 'The incisors only'], 'Canine to canine is the nasopalatine.'],
+  ['Which is the only trigeminal division with a motor root?', 'V3 (mandibular)', ['V1 (ophthalmic)', 'V2 (maxillary)', 'None'], 'V3 is mixed; V1 and V2 are sensory.']
+].map(([q, a, d, why]) => ({ q, a, d, why }));
+
+/* ------------------------------------------------------------------ data: sorting sets */
+const SORTS = [
+  { id: 'v3', title: 'V3 in the infratemporal fossa', hint: 'Short main trunk, then a mostly-motor anterior and a mostly-sensory posterior division.',
+    buckets: ['Main trunk', 'Anterior division', 'Posterior division'],
+    items: [['Meningeal branch (nervus spinosus)', 0], ['Nerve to medial pterygoid', 0], ['Masseteric n.', 1], ['Deep temporal nn.', 1], ['Nerve to lateral pterygoid', 1], ['Buccal (long buccal) n.', 1], ['Auriculotemporal n.', 2], ['Lingual n.', 2], ['Inferior alveolar n.', 2]] },
+  { id: 'v2', title: 'V2: where each branch leaves', hint: 'Four segments from the skull base to the face.',
+    buckets: ['Middle cranial fossa', 'Pterygopalatine fossa', 'Infraorbital groove & canal', 'Infraorbital foramen (face)'],
+    items: [['Meningeal branch', 0], ['PSA', 1], ['Greater palatine', 1], ['Lesser palatine', 1], ['Nasopalatine', 1], ['Zygomatic n.', 1], ['MSA (inconsistent)', 2], ['ASA', 2], ['Inferior palpebral', 3], ['Lateral nasal', 3], ['Superior labial', 3]] },
+  { id: 'exit', title: 'Exits from the skull', hint: 'Which opening does each nerve use?',
+    buckets: ['Superior orbital fissure', 'Foramen rotundum', 'Foramen ovale', 'Foramen spinosum'],
+    items: [['V1 (ophthalmic)', 0], ['Frontal, lacrimal, nasociliary nn.', 0], ['V2 (maxillary)', 1], ['V3 (mandibular)', 2], ['Motor root of CN V', 2], ['Nervus spinosus (re-entering)', 3]] },
+  { id: 'palp', title: 'Palpate it for…', hint: 'Match each landmark to the injection it guides.',
+    buckets: ['PSA', 'IANB', 'Nasopalatine', 'Greater palatine', 'Mental / incisive', 'Anterior infiltrations'],
+    items: [['Maxillary tuberosity & hamular notch', 0], ['Coronoid notch', 1], ['Pterygomandibular raphe', 1], ['Internal oblique ridge & retromolar pad', 1], ['Incisive papilla', 2], ['Depression felt with a swab opposite M3', 3], ['Region below the premolar apices', 4], ['Canine eminence & fossa', 5]] },
+  { id: 'art', title: 'Maxillary artery: three parts', hint: 'Mandibular, pterygoid and pterygopalatine parts.',
+    buckets: ['Mandibular part', 'Pterygoid part', 'Pterygopalatine part'],
+    items: [['Inferior alveolar a.', 0], ['Middle meningeal a.', 0], ['Muscular branches', 1], ['Buccal a.', 1], ['Posterior superior alveolar a.', 2], ['Infraorbital a.', 2], ['Greater palatine a.', 2], ['Sphenopalatine a.', 2]] },
+  { id: 'dens', title: 'Infiltrate or block?', hint: 'Think about the bone between the needle and the nerve.',
+    buckets: ['Infiltration is reliable', 'Use a block'],
+    items: [['Adult maxillary incisor', 0], ['Adult maxillary premolar', 0], ['Child’s mandibular primary molar', 0], ['Adult mandibular molar (thick cortex, oblique ridge)', 1], ['Maxillary M1 under a low, thick zygomatic buttress', 1], ['Whole mandibular quadrant for surgery', 1]] }
+];
+
+/* ------------------------------------------------------------------ router */
+const screen = $('#screen');
+const TABS = { numb: NumbMap, lab: SpecimenLab, photo: NameTheBlock, drill: TechniqueDrill, sort: BranchSort, rapid: RapidFire, atlas: Atlas };
+let current = null, cleanup = null;
+function go(tab) {
+  if (!TABS[tab]) tab = 'numb';
+  if (cleanup) { cleanup(); cleanup = null; }
+  current = tab;
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  screen.replaceChildren();
+  cleanup = TABS[tab](screen) || null;
+  store.set('tab', tab);
+}
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  if (location.hash !== '#' + b.dataset.tab) history.replaceState(null, '', '#' + b.dataset.tab);
+  go(b.dataset.tab);
+}));
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+
+/* ------------------------------------------------------------------ shared UI */
+function intro(title, text, extra) {
+  return h('div', { class: 'intro' }, h('div', null, h('h2', null, title), h('p', null, text)), extra || null);
+}
+function progress(i, n, score) {
+  return h('div', { class: 'progress' },
+    h('span', { class: 'mono' }, `${Math.min(i + 1, n)}/${n}`),
+    h('div', { class: 'bar' }, h('i', { style: `width:${(i / n) * 100}%` })),
+    h('span', { class: 'mono' }, `${score} correct`));
+}
+function feedback(ok, title, text) {
+  return h('div', { class: 'fb ' + (ok ? 'good' : 'bad'), role: 'status' }, h('strong', null, title), text ? h('p', null, text) : null);
+}
+function mcq(opts, correct, onDone) {
+  const wrap = h('div', { class: 'opts' });
+  const btns = opts.map((o, i) => h('button', { class: 'opt', type: 'button', onclick: () => choose(i) }, h('span', { class: 'k' }, String(i + 1)), h('span', null, o)));
+  wrap.append(...btns);
+  let done = false;
+  function choose(i) {
+    if (done) return; done = true;
+    btns.forEach((b, j) => { b.disabled = true; if (opts[j] === correct) b.classList.add('right'); });
+    const ok = opts[i] === correct;
+    if (!ok) btns[i].classList.add('wrongpick');
+    onDone(ok, opts[i]);
+  }
+  wrap.keyHandler = e => { const n = parseInt(e.key, 10); if (n >= 1 && n <= opts.length) choose(n - 1); };
+  return wrap;
+}
+function bindKeys(fn) { document.addEventListener('keydown', fn); return () => document.removeEventListener('keydown', fn); }
+function endCard(score, n, missed, again, label) {
+  const best = store.get('best:' + label, 0);
+  if (score > best) store.set('best:' + label, score);
+  return h('div', { class: 'card side', style: 'position:static' },
+    h('div', { class: 'eyebrow' }, 'Round complete'),
+    h('div', { class: 'bigscore' },
+      h('div', null, h('span', null, 'Score'), h('b', null, `${score}/${n}`)),
+      h('div', null, h('span', null, 'Best'), h('b', null, `${Math.max(score, best)}/${n}`))),
+    missed.length ? h('div', null, h('div', { class: 'eyebrow', style: 'margin-bottom:6px' }, 'Review these'),
+      h('div', { class: 'missed' }, missed.map(m => h('div', null, m)))) : h('p', { class: 'hint' }, 'No misses this round.'),
+    h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: again }, 'Play another round')));
+}
+
+/* ------------------------------------------------------------------ Numb Map */
+const GEOM = {
+  U: { w: [8.5, 6.5, 7.5, 7, 6.5, 10, 9, 8.5], d: [7, 6.5, 8, 9, 9, 11, 11, 10] },
+  L: { w: [5, 5.5, 7, 7, 7, 11, 10.5, 10], d: [6, 6, 7.5, 7.5, 8, 10.5, 10, 9.5] }
+};
+function buildArch(arch, opts = {}) {
+  const W = 340, H = 272, cx = W / 2, A = 124, Bh = 196, y0 = 30, phiMax = 1.40;
+  const flip = arch === 'L';
+  const N = 500, pts = [];
+  for (let i = 0; i <= N; i++) { const f = phiMax * i / N; pts.push([A * Math.sin(f), y0 + Bh * (1 - Math.cos(f))]); }
+  const cum = [0]; for (let i = 1; i <= N; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const L = cum[N]; const g = GEOM[arch]; const gap = 0.9;
+  const total = g.w.reduce((a, b) => a + b, 0) + gap * 8; const sc = (L - 4) / total;
+  function at(len) { // point + unit tangent at arc length (right half, x offset from centre)
+    let i = 1; while (i < N && cum[i] < len) i++;
+    const t = (len - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
+    const x = pts[i - 1][0] + t * (pts[i][0] - pts[i - 1][0]), y = pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1]);
+    const dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1], m = Math.hypot(dx, dy);
+    return { x, y, tx: dx / m, ty: dy / m };
+  }
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'group', 'aria-label': arch === 'U' ? 'Maxillary arch, occlusal view' : 'Mandibular arch, occlusal view' });
+  if (opts.ro) svg.classList.add('ro');
+  const Y = y => flip ? H - y : y;
+  svg.append(s('line', { x1: cx, y1: flip ? H - 8 : 8, x2: cx, y2: flip ? 40 : H - 40, class: 'midline' }));
+  const zTxt = s('text', { x: cx, y: flip ? H - 118 : 118, 'text-anchor': 'middle', class: 'zone' }); zTxt.textContent = arch === 'U' ? 'palatal' : 'lingual'; svg.append(zTxt);
+  const nodes = {};
+  const gums = s('g'), teeth = s('g'); svg.append(gums, teeth);
+  for (const side of [-1, 1]) { // -1 = patient's right (viewer's left)
+    const q = arch === 'U' ? (side < 0 ? 'UR' : 'UL') : (side < 0 ? 'LR' : 'LL');
+    let pos = 2;
+    g.w.forEach((w, i) => {
+      const a0 = pos, a1 = pos + w * sc; pos = a1 + gap * sc;
+      const mid = at((a0 + a1) / 2);
+      const X = cx + side * mid.x, yy = Y(mid.y);
+      const tx = side * mid.tx, ty = flip ? -mid.ty : mid.ty;
+      // outward normal: away from arch interior
+      let nx = -ty, ny = tx; const cyc = Y(y0 + Bh * .62);
+      if ((X - cx) * nx + (yy - cyc) * ny < 0) { nx = -nx; ny = -ny; }
+      const n = num(q, i), d = g.d[i] * sc, ww = w * sc - 1;
+      const ang = Math.atan2(ty, tx) * 180 / Math.PI;
+      const tname = `#${n} ${QN[q]} ${TNAME[TYPES[i]]}`;
+      // gums
+      for (const [k, dir] of [['b', 1], ['l', -1]]) {
+        const off = dir * (d / 2 + 7.5);
+        let dstr = '';
+        for (let j = 0; j <= 8; j++) {
+          const p = at(a0 + 1.2 + (a1 - a0 - 2.4) * j / 8);
+          const px = cx + side * p.x, py = Y(p.y);
+          dstr += (j ? 'L' : 'M') + (px + nx * off).toFixed(1) + ' ' + (py + ny * off).toFixed(1);
+        }
+        const tissue = k === 'b' ? (i < 3 ? 'labial' : 'buccal') : (arch === 'U' ? 'palatal' : 'lingual');
+        const gp = s('path', { d: dstr, class: 'gum', 'data-t': k + n, tabindex: opts.ro ? -1 : 0, role: opts.ro ? 'img' : 'button', 'aria-label': `${tissue} gingiva, ${tname}` });
+        const tt = s('title'); tt.textContent = `${tissue} gingiva · ${tname}`; gp.append(tt);
+        gums.append(gp); nodes[k + n] = gp;
+      }
+      const tg = s('g', { class: 'tooth', 'data-t': 'p' + n, tabindex: opts.ro ? -1 : 0, role: opts.ro ? 'img' : 'button', 'aria-label': `pulp, ${tname}` });
+      const r = s('rect', { x: X - ww / 2, y: yy - d / 2, width: ww, height: d, rx: Math.min(ww, d) * (i < 3 ? .45 : .32), transform: `rotate(${ang} ${X} ${yy})` });
+      const tt = s('title'); tt.textContent = `Pulp · ${tname}`; tg.append(tt, r);
+      if (!opts.nolabels) { const tx2 = s('text', { x: X, y: yy }); tx2.textContent = n; tg.append(tx2); }
+      teeth.append(tg); nodes['p' + n] = tg;
+    });
+  }
+  const lab = (x, t, anchor) => { const e = s('text', { x, y: flip ? 14 : H - 6, class: 'lbl', 'text-anchor': anchor }); e.textContent = t; svg.append(e); };
+  lab(6, 'PATIENT’S R', 'start'); lab(W - 6, 'PATIENT’S L', 'end');
+  return { svg, nodes };
+}
+function paintKey(nodes, extras, key) {
+  for (const [t, el] of Object.entries(nodes)) { el.classList.remove('req', 'var'); if (key[t] === 'req') el.classList.add('req'); else if (key[t] === 'opt') el.classList.add('var'); }
+  if (extras) for (const [t, el] of Object.entries(extras)) { el.classList.remove('req', 'var'); if (key[t] === 'req') el.classList.add('req'); else if (key[t] === 'opt') el.classList.add('var'); }
+}
+
+function NumbMap(root) {
+  let mode = store.get('numbMode', 'paint');
+  const ROUND = 8;
+  let order, idx, score, missed, sel, checked;
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Mode' },
+    h('button', { type: 'button', 'aria-pressed': mode === 'paint', onclick: () => setMode('paint') }, 'Paint the numb zone'),
+    h('button', { type: 'button', 'aria-pressed': mode === 'name', onclick: () => setMode('name') }, 'Name the block'));
+  root.append(intro('Numb Map', 'Tap every tooth (pulp) and gingival band a block anesthetizes, plus any skin or tongue it reaches. Or flip it: read the zone and name the block.', seg));
+  const stage = h('div', { class: 'stage numb' }); root.append(stage);
+  let offKeys = null;
+  function setMode(m) { mode = m; store.set('numbMode', m); seg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', (i === 0) === (m === 'paint'))); start(); }
+  function start() { order = shuffle(ZONES).slice(0, ROUND); idx = 0; score = 0; missed = []; next(); }
+  function next() {
+    if (offKeys) { offKeys(); offKeys = null; }
+    stage.replaceChildren();
+    if (idx >= order.length) { stage.append(endCard(score, order.length, missed, start, 'numb-' + mode)); return; }
+    const z = order[idx]; sel = new Set(); checked = false;
+    const up = buildArch('U', { ro: mode === 'name' }), lo = buildArch('L', { ro: mode === 'name' });
+    const nodes = Object.assign({}, up.nodes, lo.nodes);
+    const extras = {};
+    const exRow = h('div', { class: 'extras' }, h('span', { class: 'lab' }, 'Also numb?'),
+      EXTRAS.map(x => { const b = h('button', { type: 'button', class: 'xt', 'aria-pressed': 'false', onclick: () => toggle('x_' + x.id) }, x.label); extras['x_' + x.id] = b; return b; }));
+    const legend = h('div', { class: 'legend' },
+      mode === 'paint'
+        ? [h('span', null, h('i', { class: 'lg-sel' }), 'your pick'), h('span', null, h('i', { class: 'lg-hit' }), 'correct'), h('span', null, h('i', { class: 'lg-miss' }), 'missed'), h('span', null, h('i', { class: 'lg-wrong' }), 'not numb'), h('span', null, h('i', { class: 'lg-var' }), 'variable (either is fine)'), h('span', null, h('i', { class: 'lg-gum' }), 'gingiva band')]
+        : [h('span', null, h('i', { class: 'lg-sel' }), 'anesthetized'), h('span', null, h('i', { class: 'lg-var' }), 'variable'), h('span', null, h('i', { class: 'lg-gum' }), 'gingiva band')]);
+    const mapCard = h('div', { class: 'card mapcard' },
+      h('div', { class: 'mprompt' }, mode === 'paint'
+        ? ['Paint what goes numb: ', h('em', null, B[z.block].full), z.side ? ' ' + z.side : '', '. Check is below.']
+        : 'Which block produces this numb zone? Answers are below.'),
+      h('div', { class: 'maps' },
+        h('figure', null, h('figcaption', null, h('span', null, 'Maxilla'), h('span', null, 'occlusal')), up.svg),
+        h('figure', null, h('figcaption', null, h('span', null, 'Mandible'), h('span', null, 'occlusal')), lo.svg)),
+      exRow, legend);
+    const side = h('div', { class: 'card side' }, progress(idx, order.length, score));
+    stage.append(mapCard, side);
+
+    function toggle(t) {
+      if (checked || mode !== 'paint') return;
+      const el = nodes[t] || extras[t];
+      if (sel.has(t)) { sel.delete(t); el.classList.remove('sel'); } else { sel.add(t); el.classList.add('sel'); }
+      if (extras[t]) el.setAttribute('aria-pressed', sel.has(t));
+      if (nodes[t]) el.setAttribute('aria-pressed', sel.has(t));
+      countEl.textContent = `${sel.size} selected`;
+    }
+    const onSvg = e => { const t = e.target.closest('[data-t]'); if (t) toggle(t.dataset.t); };
+    const onSvgKey = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-t]')) { e.preventDefault(); toggle(e.target.closest('[data-t]').dataset.t); } };
+    [up.svg, lo.svg].forEach(v => { v.addEventListener('click', onSvg); v.addEventListener('keydown', onSvgKey); });
+
+    const countEl = h('span', { class: 'hint mono' }, '0 selected');
+    if (mode === 'paint') {
+      const b = B[z.block];
+      side.append(
+        h('div', { class: 'prompt' }, 'Paint what goes numb after a ', h('em', null, b.full), z.side ? ' ' + z.side : '', '.'),
+        h('p', { class: 'hint' }, 'Tooth = pulpal anesthesia. Outer band = buccal/labial gingiva. Inner band = palatal/lingual gingiva. Variable areas are not scored.'));
+      const res = h('div');
+      const checkBtn = h('button', { class: 'btn', type: 'button', onclick: check }, 'Check');
+      const clearBtn = h('button', { class: 'btn ghost', type: 'button', onclick: () => { [...sel].forEach(toggle); } }, 'Clear');
+      side.append(h('div', { class: 'row' }, checkBtn, clearBtn, countEl), res);
+      function check() {
+        if (checked) return; checked = true;
+        let hit = 0, miss = 0, wrong = 0, req = 0;
+        const all = Object.assign({}, nodes, extras);
+        for (const [t, el] of Object.entries(all)) {
+          const lvl = z.key[t], on = sel.has(t);
+          el.classList.remove('sel');
+          if (lvl === 'req') { req++; if (on) { hit++; el.classList.add('hit'); } else { miss++; el.classList.add('miss'); } }
+          else if (lvl === 'opt') el.classList.add(on ? 'varsel' : 'var');
+          else if (on) { wrong++; el.classList.add('wrong'); }
+        }
+        const ok = miss === 0 && wrong === 0;
+        if (ok) score++; else missed.push(`${zoneTitle(z)}: ${z.why}`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'Exactly right' : `${hit}/${req} found · ${miss} missed · ${wrong} extra`, z.why),
+          h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < order.length ? 'Next block' : 'See results')));
+        checkBtn.disabled = true; clearBtn.disabled = true;
+      }
+      offKeys = bindKeys(e => { if (e.key === 'Enter' && !checked && !e.target.closest('[data-t]') && !e.target.closest('button')) check(); });
+    } else {
+      paintKey(nodes, extras, z.key);
+      Object.values(extras).forEach(b => { b.disabled = true; });
+      const correct = B[z.block].full;
+      const pool = shuffle(BLOCKS.filter(b => b.full !== correct && compatible(b.id, z.block))).slice(0, 3).map(b => b.full);
+      const opts = shuffle([correct, ...pool]);
+      const res = h('div');
+      const m = mcq(opts, correct, ok => {
+        if (ok) score++; else missed.push(`${zoneTitle(z)}: ${z.why}`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'Correct' : `It was the ${correct}${z.side ? ' ' + z.side : ''}`, z.why),
+          h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < order.length ? 'Next zone' : 'See results')));
+      });
+      side.append(h('div', { class: 'prompt' }, 'Which block produces this numb zone?'),
+        h('p', { class: 'hint' }, 'Yellow is anesthetized; dashed is variable. Lip, eyelid, nose, chin and tongue chips below the maps count too.'), m, res);
+      offKeys = bindKeys(m.keyHandler);
+    }
+  }
+  start();
+  return () => { if (offKeys) offKeys(); };
+}
+
+/* ------------------------------------------------------------------ Specimen Lab */
+function SpecimenLab(root) {
+  let plateSel = store.get('labPlate', 'all');
+  const ROUND = 10;
+  let qs, idx, score, missed, offKeys = null;
+  const chooser = h('div', { class: 'chooser', role: 'group', 'aria-label': 'Specimen' },
+    [['all', 'All specimens'], ...PLATES.map(p => [p.id, p.title.split(',')[0]]), ['photo', 'Intraoral photos']]
+      .map(([id, t]) => h('button', { class: 'chip', type: 'button', 'aria-pressed': plateSel === id, 'data-id': id, onclick: () => { plateSel = id; store.set('labPlate', id); chooser.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id)); start(); } }, t)));
+  root.append(intro('Specimen Lab', 'Labels have been removed from the lecture’s dissections and photos. Tap the pin for a named structure, name a highlighted pin, or tap the injection site on a real mouth.'),
+    h('div', { style: 'margin:-4px 0 14px' }, chooser));
+  const stage = h('div', { class: 'stage' }); root.append(stage);
+  function build() {
+    const out = [];
+    const plates = plateSel === 'all' ? PLATES : PLATES.filter(p => p.id === plateSel);
+    if (plateSel !== 'photo') for (const p of plates) for (const pin of p.pins) out.push({ kind: Math.random() < .5 ? 'find' : 'name', plate: p, pin });
+    if (plateSel === 'all' || plateSel === 'photo') for (const t of TAPS) out.push({ kind: 'tap', t });
+    let sh = shuffle(out);
+    if (plateSel === 'all') { // make sure a couple of photo taps appear
+      const taps = sh.filter(q => q.kind === 'tap').slice(0, 3), rest = sh.filter(q => q.kind !== 'tap').slice(0, ROUND - taps.length);
+      sh = shuffle([...rest, ...taps]);
+    }
+    return sh.slice(0, plateSel === 'photo' ? TAPS.length : ROUND);
+  }
+  function start() { qs = build(); idx = 0; score = 0; missed = []; next(); }
+  function next() {
+    if (offKeys) { offKeys(); offKeys = null; }
+    stage.replaceChildren();
+    if (idx >= qs.length) { stage.append(endCard(score, qs.length, missed, start, 'lab-' + plateSel)); return; }
+    const q = qs[idx];
+    const side = h('div', { class: 'card side' }, progress(idx, qs.length, score));
+    const res = h('div');
+    const nextBtn = () => h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next' : 'See results'));
+    if (q.kind === 'tap') {
+      const t = q.t;
+      const frame = h('div', { class: 'frame tapmode' }, h('img', { src: img(t.img), alt: t.title, draggable: 'false' }));
+      const card = h('div', { class: 'card plate' }, h('div', { class: 'platehead' }, h('h3', null, t.title), h('span', { class: 'src' }, t.src)), frame);
+      stage.append(card, side);
+      side.append(h('div', { class: 'prompt' }, t.q), h('p', { class: 'hint' }, 'Tap directly on the photo.'), res);
+      let done = false;
+      frame.addEventListener('click', e => {
+        if (done) return; done = true;
+        const r = frame.getBoundingClientRect();
+        const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+        const ok = t.shapes.some(sh => sh.r != null
+          ? Math.hypot((fx - sh.x) * r.width, (fy - sh.y) * r.height) <= sh.r * r.width
+          : fx >= sh.x0 && fx <= sh.x1 && fy >= sh.y0 && fy <= sh.y1);
+        frame.classList.remove('tapmode');
+        for (const sh of t.shapes) {
+          if (sh.r != null) frame.append(h('div', { class: 'mark', style: `left:${sh.x * 100}%;top:${sh.y * 100}%;width:${sh.r * 200}%;aspect-ratio:1` }));
+          else frame.append(h('div', { class: 'markrect', style: `left:${sh.x0 * 100}%;top:${sh.y0 * 100}%;width:${(sh.x1 - sh.x0) * 100}%;height:${(sh.y1 - sh.y0) * 100}%` }));
+        }
+        frame.append(h('div', { class: 'tapdot ' + (ok ? 'good' : 'bad'), style: `left:${fx * 100}%;top:${fy * 100}%` }));
+        if (ok) score++; else missed.push(`${t.q} ${t.why}`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'On target' : 'Not quite: the green zone is the target', t.why));
+        if (t.reveal) res.append(h('figure', { style: 'margin:12px 0 0' }, h('img', { src: img(t.reveal), alt: 'IANB technique photo with the target marked', style: 'width:100%;border-radius:6px' }), h('figcaption', { class: 'src', style: 'margin-top:4px' }, 'Lecture photo: target marked 6–10 mm above the occlusal plane')));
+        res.append(nextBtn());
+      });
+      return;
+    }
+    const p = q.plate;
+    const frame = h('div', { class: 'frame' }, h('img', { src: img(p.img), alt: p.title + ' (labels removed)', draggable: 'false' }));
+    const card = h('div', { class: 'card plate' }, h('div', { class: 'platehead' }, h('h3', null, p.title), h('span', { class: 'src' }, p.src)), frame);
+    stage.append(card, side);
+    const pins = p.pins.map((pin, i) => {
+      const b = h('button', { class: 'pin', type: 'button', style: `left:${pin.x * 100}%;top:${pin.y * 100}%`, 'aria-label': `Pin ${i + 1}` }, String(i + 1));
+      frame.append(b); return b;
+    });
+    const target = p.pins.indexOf(q.pin);
+    const tagAt = (i, cls) => { const pin = p.pins[i]; frame.append(h('div', { class: 'tag' + (pin.y < .12 ? ' below' : ''), style: `left:${Math.min(Math.max(pin.x, .16), .84) * 100}%;top:${pin.y * 100}%` }, pin.l)); };
+    if (q.kind === 'find') {
+      side.append(h('div', { class: 'prompt' }, 'Tap the pin on the ', h('em', null, q.pin.l), '.'), res);
+      let done = false;
+      pins.forEach((b, i) => b.addEventListener('click', () => {
+        if (done) return; done = true;
+        const ok = i === target;
+        b.classList.add(ok ? 'good' : 'bad'); pins[target].classList.add('good');
+        tagAt(target); if (!ok) tagAt(i);
+        if (ok) score++; else missed.push(`${q.pin.l} (${p.title}): ${q.pin.i}`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'Correct' : `That was the ${p.pins[i].l.toLowerCase()}`, q.pin.i), nextBtn());
+      }));
+    } else {
+      pins[target].classList.add('focus');
+      pins.forEach((b, i) => { if (i !== target) b.style.opacity = .55; b.tabIndex = -1; b.style.cursor = 'default'; });
+      const others = shuffle(p.pins.filter(x => x !== q.pin)).slice(0, 3).map(x => x.l);
+      const m = mcq(shuffle([q.pin.l, ...others]), q.pin.l, ok => {
+        pins[target].classList.remove('focus'); pins[target].classList.add(ok ? 'good' : 'bad'); tagAt(target);
+        if (ok) score++; else missed.push(`${q.pin.l} (${p.title}): ${q.pin.i}`);
+        record(ok);
+        res.append(feedback(ok, ok ? 'Correct' : `It’s the ${q.pin.l.toLowerCase()}`, q.pin.i), nextBtn());
+      });
+      side.append(h('div', { class: 'prompt' }, `What is at pin ${target + 1}?`), h('p', { class: 'hint' }, 'The pulsing pin. Keys 1–4 answer.'), m, res);
+      offKeys = bindKeys(m.keyHandler);
+    }
+  }
+  start();
+  return () => { if (offKeys) offKeys(); };
+}
+
+/* ------------------------------------------------------------------ Name the Block */
+function NameTheBlock(root) {
+  let qs, idx, score, missed, offKeys = null;
+  root.append(intro('Name the Block', 'Technique photos and models from the lecture with the captions removed. Identify the injection from the needle position and the teeth highlighted.'));
+  const stage = h('div', { class: 'stage' }); root.append(stage);
+  function start() {
+    qs = shuffle([...PHOTO_ID.map(p => ({ ...p, t: 'block' })), ...shuffle(CONCEPTS).slice(0, 2).map(c => ({ ...c, t: 'concept' }))]);
+    idx = 0; score = 0; missed = []; next();
+  }
+  function next() {
+    if (offKeys) { offKeys(); offKeys = null; }
+    stage.replaceChildren();
+    if (idx >= qs.length) { stage.append(endCard(score, qs.length, missed, start, 'photo')); return; }
+    const q = qs[idx];
+    let correct, opts, prompt;
+    if (q.t === 'block') {
+      const blk = B[q.a];
+      correct = blk.full;
+      const same = BLOCKS.filter(b => b.id !== blk.id && compatible(b.id, blk.id) && (b.arch === blk.arch || b.arch === 'both' || blk.arch === 'both'));
+      const other = BLOCKS.filter(b => b.id !== blk.id && compatible(b.id, blk.id) && !same.includes(b));
+      opts = shuffle([correct, ...shuffle(same).slice(0, 3).concat(shuffle(other)).slice(0, 3).map(b => b.full)]);
+      prompt = 'Which injection is this?';
+    } else {
+      correct = q.a; opts = ['Local infiltration', 'Field block', 'Nerve block']; prompt = 'The circle marks where solution is deposited. Which technique is this?';
+    }
+    const res = h('div');
+    const side = h('div', { class: 'card side' }, progress(idx, qs.length, score), h('div', { class: 'prompt' }, prompt));
+    const m = mcq(opts, correct, ok => {
+      if (ok) score++; else missed.push(`${correct}: ${q.why}`);
+      record(ok);
+      res.append(feedback(ok, ok ? 'Correct' : `It’s the ${correct.charAt(0).toLowerCase() + correct.slice(1)}`, q.why),
+        h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next photo' : 'See results')));
+    });
+    side.append(m, res);
+    stage.append(h('div', { class: 'card photo' }, h('img', { src: img(q.img), alt: 'Injection technique (caption removed)' })), side);
+    offKeys = bindKeys(m.keyHandler);
+  }
+  start();
+  return () => { if (offKeys) offKeys(); };
+}
+
+/* ------------------------------------------------------------------ Technique Drill */
+const PROPS = [
+  ['height', 'Where does the needle go in for the', 'Which block enters here?'],
+  ['angle', 'Needle angulation for the', 'Which block uses this angulation?'],
+  ['depth', 'Depth for the', 'Which block has this depth?'],
+  ['aspirate', 'Aspiration and deposit for the', 'Which block is aspirated like this?'],
+  ['pulp', 'Pulpal anesthesia from the', 'Which block gives this pulpal anesthesia?'],
+  ['soft', 'Soft tissue anesthetized by the', 'Which block numbs this soft tissue?'],
+  ['nerve', 'Which nerve does the', 'Which block targets this?']
+];
+const PLABEL = { height: 'Entry', angle: 'Angle', depth: 'Depth', aspirate: 'Aspiration', pulp: 'Pulps', soft: 'Soft tissue', nerve: 'Nerve' };
+function drillQuestions() {
+  const out = [];
+  for (const b of BLOCKS) for (const [prop, fwd, rev] of PROPS) {
+    const val = b[prop]; if (!val) continue;
+    const pool = [...new Set(BLOCKS.filter(o => o.id !== b.id && o[prop] && o[prop] !== val).map(o => o[prop]))];
+    if (pool.length >= 3) out.push({ q: prop === 'nerve' ? `${fwd} ${b.full.toLowerCase()} target?` : `${fwd} ${b.full.toLowerCase()}?`, a: val, d: shuffle(pool).slice(0, 3), why: `${b.full}. ${PLABEL[prop]}: ${val}.${b.pearl ? ' ' + b.pearl : ''}`, tag: prop });
+    // reverse: only when the value is unique to this block
+    const dup = BLOCKS.some(o => o.id !== b.id && o[prop] === val);
+    if (!dup && prop !== 'nerve') {
+      const d = shuffle(BLOCKS.filter(o => o.id !== b.id && compatible(o.id, b.id))).slice(0, 3).map(o => o.full);
+      out.push({ q: `${rev} “${val}”`, a: b.full, d, why: `${b.full}. ${b.pearl || ''}`, tag: prop });
+    }
+  }
+  return out;
+}
+function TechniqueDrill(root) {
+  const ROUND = 12;
+  let focus = store.get('drillFocus', 'all');
+  let qs, idx, score, missed, offKeys = null;
+  const chooser = h('div', { class: 'chooser', role: 'group', 'aria-label': 'Topic' },
+    [['all', 'Everything'], ['technique', 'Height · angle · depth'], ['coverage', 'What goes numb'], ['facts', 'Anatomy & variations']]
+      .map(([id, t]) => h('button', { class: 'chip', type: 'button', 'aria-pressed': focus === id, 'data-id': id, onclick: () => { focus = id; store.set('drillFocus', id); chooser.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id)); start(); } }, t)));
+  root.append(intro('Technique Drill', 'Twelve questions per round from the block tables, the V2/V3 pathway slides, bone density, vessels and the variation slides.'), h('div', { style: 'margin:-4px 0 14px' }, chooser));
+  const stage = h('div', { class: 'stage' }); root.append(stage);
+  function start() {
+    const dq = drillQuestions();
+    let pool;
+    if (focus === 'technique') pool = dq.filter(q => ['height', 'angle', 'depth', 'aspirate'].includes(q.tag));
+    else if (focus === 'coverage') pool = dq.filter(q => ['pulp', 'soft', 'nerve'].includes(q.tag));
+    else if (focus === 'facts') pool = FACTS;
+    else pool = [...shuffle(dq).slice(0, 30), ...FACTS];
+    qs = shuffle(pool).slice(0, ROUND); idx = 0; score = 0; missed = []; next();
+  }
+  function next() {
+    if (offKeys) { offKeys(); offKeys = null; }
+    stage.replaceChildren();
+    if (idx >= qs.length) { stage.append(endCard(score, qs.length, missed, start, 'drill-' + focus)); return; }
+    const q = qs[idx];
+    const res = h('div');
+    const m = mcq(shuffle([q.a, ...q.d]), q.a, ok => {
+      if (ok) score++; else missed.push(`${q.q} → ${q.a}`);
+      record(ok);
+      res.append(feedback(ok, ok ? 'Correct' : 'Answer: ' + q.a, q.why),
+        h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: () => { idx++; next(); } }, idx + 1 < qs.length ? 'Next' : 'See results')));
+    });
+    const main = h('div', { class: 'card rf' }, progress(idx, qs.length, score), h('div', { class: 'prompt' }, q.q), m, res);
+    stage.style.gridTemplateColumns = 'minmax(0, 1fr)';
+    stage.append(main);
+    offKeys = bindKeys(m.keyHandler);
+  }
+  start();
+  return () => { if (offKeys) offKeys(); };
+}
+
+/* ------------------------------------------------------------------ Branch Sort */
+function BranchSort(root) {
+  let setId = store.get('sortSet', 'v3');
+  const chooser = h('div', { class: 'chooser', role: 'group', 'aria-label': 'Set' },
+    SORTS.map(st => h('button', { class: 'chip', type: 'button', 'aria-pressed': st.id === setId, 'data-id': st.id, onclick: () => { setId = st.id; store.set('sortSet', st.id); chooser.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === st.id)); render(); } }, st.title)));
+  root.append(intro('Branch Sort', 'Pick an item, then tap the group it belongs to. Tap a placed item to send it back.'), h('div', { style: 'margin:-4px 0 14px' }, chooser));
+  const area = h('div'); root.append(area);
+  function render() {
+    const st = SORTS.find(x => x.id === setId);
+    let armed = null, checked = false;
+    const place = new Map(); // item idx -> bucket idx
+    const items = shuffle(st.items.map((it, i) => ({ label: it[0], ans: it[1], i })));
+    const tray = h('div', { class: 'tray', 'aria-label': 'Unsorted items' });
+    const btns = {};
+    const bucketEls = st.buckets.map((name, bi) => {
+      const inner = h('div', { class: 'in' });
+      const el = h('div', { class: 'bucket' }, h('button', { class: 'bh', type: 'button', onclick: () => drop(bi) }, name), inner);
+      el.inner = inner; return el;
+    });
+    items.forEach(it => {
+      const b = h('button', { class: 'item', type: 'button', 'aria-pressed': 'false', onclick: () => clickItem(it) }, it.label);
+      btns[it.i] = b; tray.append(b);
+    });
+    function arm(it) {
+      armed = it;
+      Object.values(btns).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      if (it) btns[it.i].setAttribute('aria-pressed', 'true');
+      bucketEls.forEach(b => b.classList.toggle('armed', !!it));
+    }
+    function clickItem(it) {
+      if (checked) return;
+      if (place.has(it.i)) { place.delete(it.i); tray.append(btns[it.i]); arm(null); upd(); return; }
+      arm(armed === it ? null : it);
+    }
+    function drop(bi) {
+      if (checked || !armed) return;
+      place.set(armed.i, bi); bucketEls[bi].inner.append(btns[armed.i]); arm(null); upd();
+    }
+    const checkBtn = h('button', { class: 'btn', type: 'button', disabled: true, onclick: check }, 'Check');
+    const status = h('span', { class: 'hint mono' });
+    const res = h('div');
+    function upd() { status.textContent = `${place.size}/${items.length} placed`; checkBtn.disabled = place.size < items.length; }
+    function check() {
+      checked = true; let good = 0;
+      items.forEach(it => {
+        const b = btns[it.i], ok = place.get(it.i) === it.ans;
+        b.classList.add(ok ? 'good' : 'bad'); if (ok) good++; else b.append(h('span', { class: 'fix' }, '→ ' + st.buckets[it.ans]));
+        record(ok);
+      });
+      const best = store.get('best:sort-' + st.id, 0); if (good > best) store.set('best:sort-' + st.id, good);
+      res.replaceChildren(feedback(good === items.length, `${good}/${items.length} correctly sorted`, good === items.length ? 'Clean sweep.' : 'Red items show the group they belong in.'),
+        h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', type: 'button', onclick: render }, 'Shuffle and retry'),
+          h('button', { class: 'btn ghost', type: 'button', onclick: () => { const i = SORTS.findIndex(x => x.id === setId); setId = SORTS[(i + 1) % SORTS.length].id; store.set('sortSet', setId); chooser.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === setId)); render(); } }, 'Next set')));
+      checkBtn.disabled = true;
+    }
+    upd();
+    area.replaceChildren(h('div', { class: 'card', style: 'padding:18px;display:grid;gap:12px' },
+      h('div', null, h('h3', { style: 'font-size:22px' }, st.title), h('p', { class: 'hint', style: 'margin-top:4px' }, st.hint)),
+      tray, h('div', { class: 'buckets' }, bucketEls),
+      h('div', { class: 'row' }, checkBtn, status), res));
+  }
+  render();
+}
+
+/* ------------------------------------------------------------------ Rapid Fire */
+function RapidFire(root) {
+  const SECS = 60;
+  let timer = null, offKeys = null;
+  root.append(intro('Rapid Fire', 'Sixty seconds, every question type mixed. A miss shows the answer for a moment before the next question.'));
+  const area = h('div'); root.append(area);
+  function lobby(last) {
+    area.replaceChildren(h('div', { class: 'card rf' },
+      last != null ? h('div', { class: 'bigscore' }, h('div', null, h('span', null, 'This run'), h('b', null, String(last.score))), h('div', null, h('span', null, 'Answered'), h('b', null, String(last.n))), h('div', null, h('span', null, 'Best'), h('b', null, String(stats.best)))) : h('div', { class: 'bigscore' }, h('div', null, h('span', null, 'Best'), h('b', null, String(stats.best)))),
+      last && last.missed.length ? h('div', null, h('div', { class: 'eyebrow', style: 'margin-bottom:6px' }, 'Missed'), h('div', { class: 'missed' }, last.missed.map(m => h('div', null, m)))) : null,
+      h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: run }, last ? 'Go again' : 'Start 60 seconds'), h('span', { class: 'hint' }, 'Keys 1–4 answer.'))));
+  }
+  function zoneQs() {
+    return ZONES.filter(z => !z.variant).map(z => {
+      const b = B[z.block];
+      return { q: `Which block anesthetizes: ${b.pulp === 'None' ? 'no pulps; ' + b.soft.toLowerCase() : b.pulp}?`, a: b.full, d: shuffle(BLOCKS.filter(o => o.id !== b.id && compatible(o.id, b.id))).slice(0, 3).map(o => o.full), why: z.why };
+    });
+  }
+  function run() {
+    const pool = shuffle([...FACTS, ...drillQuestions(), ...zoneQs()]);
+    let i = 0, score = 0, n = 0, left = SECS, locked = false; const missed = [];
+    const clock = h('div', { class: 'clock' }, String(SECS));
+    const sc = h('span', { class: 'mono' }, '0');
+    const body = h('div');
+    area.replaceChildren(h('div', { class: 'card rf' }, h('div', { class: 'row', style: 'justify-content:space-between' }, clock, h('div', { class: 'bigscore' }, h('div', null, h('span', null, 'Score'), h('b', null, sc)))), body));
+    const t0 = Date.now();
+    timer = setInterval(() => {
+      left = Math.max(0, SECS - Math.floor((Date.now() - t0) / 1000));
+      clock.textContent = left; clock.classList.toggle('low', left <= 10);
+      if (left <= 0) finish();
+    }, 200);
+    function ask() {
+      const q = pool[i++ % pool.length];
+      const m = mcq(shuffle([q.a, ...q.d]), q.a, ok => {
+        n++; if (ok) score++; else missed.push(`${q.q} → ${q.a}`);
+        record(ok); sc.textContent = score;
+        locked = true;
+        setTimeout(() => { locked = false; if (timer) ask(); }, ok ? 280 : 1300);
+      });
+      body.replaceChildren(h('div', { class: 'prompt' }, q.q), m);
+      if (offKeys) offKeys();
+      offKeys = bindKeys(e => { if (!locked) m.keyHandler(e); });
+    }
+    function finish() {
+      clearInterval(timer); timer = null; if (offKeys) { offKeys(); offKeys = null; }
+      if (score > stats.best) { stats.best = score; store.set('stats', stats); paintTally(); }
+      lobby({ score, n, missed });
+    }
+    ask();
+  }
+  lobby(null);
+  return () => { if (timer) clearInterval(timer); if (offKeys) offKeys(); };
+}
+
+/* ------------------------------------------------------------------ Atlas */
+function Atlas(root) {
+  root.append(intro('Atlas', 'Every block from the lecture with its landmarks, technique and numb zone. Review here, then go back to the games.'));
+  const grid = h('div', { class: 'atlas' });
+  for (const b of BLOCKS) {
+    const z = ZONES.find(z => z.block === b.id && !z.variant);
+    let map = null;
+    if (z) {
+      const arch = b.arch === 'mand' ? 'L' : 'U';
+      const a = buildArch(arch, { ro: true, nolabels: true });
+      paintKey(a.nodes, null, z.key);
+      map = a.svg;
+    }
+    const row = (k, v) => v ? [h('dt', null, k), h('dd', null, v)] : [];
+    grid.append(h('article', { class: 'card blk' },
+      h('div', { class: 'eyebrow' }, b.arch === 'mand' ? 'Mandibular' : b.arch === 'max' ? 'Maxillary' : 'Maxilla or mandible', b.ext ? ' · per Malamed' : ''),
+      h('h3', null, b.full), h('div', { class: 'nv' }, b.nerve),
+      map,
+      h('dl', null, row('Entry', b.height), row('Angle', b.angle), row('Depth', b.depth), row('Aspirate', b.aspirate), row('Pulps', b.pulp), row('Soft tissue', b.soft), row('Landmark', b.landmark)),
+      b.pearl ? h('div', { class: 'pearl' }, b.pearl) : null));
+  }
+  root.append(grid);
+  const vars = [
+    ['MSA nerve present', '~28% (textbook) – 72% (dissection)', 'Premolars may be supplied by MSA, ASA or PSA.'],
+    ['MB root of M1 outside PSA territory', 'Frequent', 'Add a supraperiosteal injection over M1, or an MSA/infraorbital block.'],
+    ['Low, thick zygomatic buttress over M1', 'Children, some adults', 'Infiltration fails: use a PSA block.'],
+    ['ASA midline crossover', 'Common', 'A central incisor may need a contralateral labial infiltration.'],
+    ['Greater palatine foramen position', 'Usually opposite M3', 'Sometimes M2–M3 or further back; find it by palpation.'],
+    ['Canine palatal overlap (GP + NP)', 'Common', 'One palatal block may not be enough.'],
+    ['Retromolar foramen', '~24%', 'Fibres the IANB does not reach: “lip numb, molar not”.'],
+    ['Bifid mandibular canal', '~38%', 'A second canal or foramen may need a higher block or supplemental injection.'],
+    ['Accessory mental foramen', '~6–10%', 'Extra mental fibres; relevant to mental/incisive blocks.'],
+    ['Anterior loop of the mental nerve', '~40%', 'The nerve runs forward past the foramen before turning back.']
+  ];
+  root.append(h('h3', { style: 'font-size:22px;margin-top:28px' }, 'Anatomical variations'),
+    h('div', { class: 'tablewrap' }, h('table', null,
+      h('thead', null, h('tr', null, h('th', null, 'Variation'), h('th', null, 'How often'), h('th', null, 'What to do'))),
+      h('tbody', null, vars.map(v => h('tr', null, h('td', null, v[0]), h('td', { class: 'n' }, v[1]), h('td', null, v[2])))))));
+}
+
+/* ------------------------------------------------------------------ boot */
+function boot(data) {
+  paintTally();
+  const hash = location.hash.slice(1);
+  go(TABS[hash] ? hash : (data && data.tab) || store.get('tab', 'numb'));
+}
+window.claude?.hot?.snapshot?.(() => ({ tab: current }));
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+<!--ARTIFACT-END-->
+</body>
+</html>
